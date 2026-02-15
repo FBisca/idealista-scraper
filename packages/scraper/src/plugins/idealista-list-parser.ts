@@ -7,6 +7,15 @@ export interface IdealistaAgencyInfo {
 	markup?: string
 }
 
+export interface IdealistaAgencyDebugCandidate {
+	selector: string
+	href?: string
+	title?: string
+	text?: string
+	markup?: string
+	className?: string
+}
+
 export interface IdealistaListingDetails {
 	raw: string[]
 	rooms?: number
@@ -19,6 +28,16 @@ export interface IdealistaPriceInfo {
 	originalValue?: number
 	discount?: number
 	currency: 'EUR' | 'USD' | 'GBP' | 'UNKNOWN'
+}
+
+export interface IdealistaAveragePricePerSquareMeter {
+	value: number
+	currency: 'EUR' | 'USD' | 'GBP' | 'UNKNOWN'
+}
+
+export interface IdealistaPaginationInfo {
+	currentPage: number
+	nextPageUrl?: string
 }
 
 export interface IdealistaListing {
@@ -34,6 +53,9 @@ export interface IdealistaListing {
 
 export interface IdealistaListParseResult {
 	sourceUrl: string
+	pagination: IdealistaPaginationInfo
+	totalItems?: number
+	averagePricePerSquareMeter?: IdealistaAveragePricePerSquareMeter
 	listings: IdealistaListing[]
 }
 
@@ -54,6 +76,10 @@ export class IdealistaListParserPlugin extends ContentParserPlugin<string, Ideal
 	public async extract(content: WebContent<string>, _context?: ParseContext): Promise<IdealistaListParseResult> {
 		const $ = cheerio.load(content.data)
 		const listings: IdealistaListing[] = []
+		const nextPageHref = this.optionalText($('.pagination li.next a').first().attr('href'))
+		const currentPage = this.extractCurrentPage($)
+		const totalItems = this.extractTotalItems($)
+		const averagePricePerSquareMeter = this.extractAveragePricePerSquareMeter($)
 
 		$('article.item').each((_, element) => {
 			const article = $(element)
@@ -96,7 +122,8 @@ export class IdealistaListParserPlugin extends ContentParserPlugin<string, Ideal
 				article.find('.pricedown_price, .item-price-discount, .item-price--discount').first().text()
 			)
 			const price = this.buildPriceInfo(currentPrice, originalPrice)
-			const agency = this.extractAgency(article, content.url, $)
+			const agencyCandidates = this.collectAgencyCandidates(article, content.url, $)
+			const agency = this.resolveAgencyFromCandidates(agencyCandidates)
 
 			listings.push({
 				id,
@@ -112,13 +139,71 @@ export class IdealistaListParserPlugin extends ContentParserPlugin<string, Ideal
 
 		return {
 			sourceUrl: content.url,
+			pagination: {
+				currentPage,
+				...(nextPageHref ? { nextPageUrl: this.toAbsoluteUrl(nextPageHref, content.url) } : {})
+			},
+			...(totalItems ? { totalItems } : {}),
+			...(averagePricePerSquareMeter ? { averagePricePerSquareMeter } : {}),
 			listings
+		}
+	}
+
+	private extractCurrentPage($: cheerio.CheerioAPI): number {
+		const currentPageText = this.optionalText($('.pagination li.selected span').first().text())
+		if (!currentPageText) {
+			return 1
+		}
+
+		const parsedPage = Number(currentPageText)
+		if (!Number.isFinite(parsedPage) || parsedPage <= 0) {
+			return 1
+		}
+
+		return Math.trunc(parsedPage)
+	}
+
+	private extractTotalItems($: cheerio.CheerioAPI): number | undefined {
+		const text = this.optionalText($('.breadcrumb-navigation-element-info').first().text())
+		if (!text) {
+			return undefined
+		}
+
+		const match = text.match(/([\d.]+)\s+con\s+tu[s]?\s+criterios/i)
+		if (!match?.[1]) {
+			return undefined
+		}
+
+		const normalized = match[1].replace(/\./g, '')
+		const parsedValue = Number(normalized)
+
+		if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+			return undefined
+		}
+
+		return parsedValue
+	}
+
+	private extractAveragePricePerSquareMeter($: cheerio.CheerioAPI): IdealistaAveragePricePerSquareMeter | undefined {
+		const text = this.optionalText($('.items-average-price').first().text())
+		if (!text) {
+			return undefined
+		}
+
+		const value = this.parsePriceValue(text)
+		if (!value) {
+			return undefined
+		}
+
+		return {
+			value,
+			currency: this.parseCurrencyCode(text)
 		}
 	}
 
 	private extractTags(article: ReturnType<cheerio.CheerioAPI>, $: cheerio.CheerioAPI): string[] {
 		const tags = article
-			.find('.item-tag, .item-label, .tag')
+			.find('.item-tag, .item-label, .tag, .listing-tags, .listing-tags-container .listing-tags')
 			.map((_, tag) => this.normalizeText($(tag).text()))
 			.get()
 			.filter(Boolean)
@@ -126,28 +211,108 @@ export class IdealistaListParserPlugin extends ContentParserPlugin<string, Ideal
 		return [...new Set(tags)]
 	}
 
-	private extractAgency(
+	private collectAgencyCandidates(
 		article: ReturnType<cheerio.CheerioAPI>,
 		sourceUrl: string,
 		$: cheerio.CheerioAPI
-	): IdealistaAgencyInfo | undefined {
-		const footer = article.find('.item-detail-footer, .item-logo').first()
-		if (!footer.length) {
+	): IdealistaAgencyDebugCandidate[] {
+		const selectors = [
+			'picture.logo-branding a[href]',
+			'.logo-branding a[href]',
+			'[class*="logo-branding"] a[href]',
+			'.item-detail-footer a[href]',
+			'.item-logo a[href]',
+			'.advertiser-name a[href]',
+			'a[href*="/pro/"]',
+			'a[href*="/inmobiliaria"]',
+			'a[data-markup]',
+			'.item-detail-footer [data-markup]',
+			'.item-logo [data-markup]',
+			'[data-markup]'
+		]
+
+		const candidates: IdealistaAgencyDebugCandidate[] = []
+		const seen = new Set<string>()
+
+		for (const selector of selectors) {
+			article.find(selector).each((_, element) => {
+				const link = $(element)
+				const closestAnchor = link.is('a') ? link : link.closest('a')
+				const hrefRaw = this.optionalText(link.attr('href') ?? closestAnchor.attr('href'))
+				const title = this.optionalText(link.attr('title') ?? closestAnchor.attr('title'))
+				const text = this.optionalText(link.text())
+				const markup = this.optionalText(link.attr('data-markup'))
+				const className = this.optionalText(link.attr('class'))
+
+				const isListingLink = Boolean(className?.includes('item-link') || hrefRaw?.includes('/inmueble/'))
+				if (isListingLink) {
+					return
+				}
+
+				if (!hrefRaw && !title && !text && !markup) {
+					return
+				}
+
+				const href = hrefRaw ? this.toAbsoluteUrl(hrefRaw, sourceUrl) : undefined
+				const fingerprint = `${selector}|${href ?? ''}|${title ?? ''}|${text ?? ''}|${markup ?? ''}`
+				if (seen.has(fingerprint)) {
+					return
+				}
+
+				seen.add(fingerprint)
+				candidates.push({
+					selector,
+					...(href ? { href } : {}),
+					...(title ? { title } : {}),
+					...(text ? { text } : {}),
+					...(markup ? { markup } : {}),
+					...(className ? { className } : {})
+				})
+			})
+		}
+
+		return candidates
+	}
+
+	private resolveAgencyFromCandidates(candidates: IdealistaAgencyDebugCandidate[]): IdealistaAgencyInfo | undefined {
+		if (!candidates.length) {
 			return undefined
 		}
 
-		const agencyLink = footer.find('a').first()
-		const title = this.optionalText(agencyLink.attr('title') ?? footer.find('.advertiser-name').first().text())
-		const href = agencyLink.attr('href')
-		const markup = this.optionalText(footer.find('[data-markup]').first().attr('data-markup'))
+		const preferredCandidate =
+			candidates.find(candidate => candidate.selector.includes('logo-branding') && Boolean(candidate.href)) ??
+			candidates.find(candidate => candidate.href?.includes('/pro/')) ??
+			candidates.find(candidate => candidate.href?.includes('/inmobiliaria')) ??
+			candidates[0]
 
+		if (!preferredCandidate) {
+			return undefined
+		}
+
+		const markupFromSameHref = preferredCandidate.href
+			? candidates.find(candidate => candidate.href === preferredCandidate.href && candidate.markup)?.markup
+			: undefined
+
+		const title =
+			preferredCandidate.title ?? preferredCandidate.text ?? this.inferAgencyTitleFromHref(preferredCandidate.href)
 		const agency: IdealistaAgencyInfo = {
 			...(title ? { title } : {}),
-			...(href ? { url: this.toAbsoluteUrl(href, sourceUrl) } : {}),
-			...(markup ? { markup } : {})
+			...(preferredCandidate.href ? { url: preferredCandidate.href } : {}),
+			...(preferredCandidate.markup || markupFromSameHref
+				? { markup: preferredCandidate.markup ?? markupFromSameHref }
+				: {})
 		}
 
 		return Object.keys(agency).length ? agency : undefined
+	}
+
+	private inferAgencyTitleFromHref(href?: string): string | undefined {
+		if (!href) {
+			return undefined
+		}
+
+		const match = href.match(/\/pro\/([^/]+)/i)
+		return this.optionalText(match?.[1])
 	}
 
 	private extractRooms(details: string): number | undefined {
@@ -190,11 +355,11 @@ export class IdealistaListParserPlugin extends ContentParserPlugin<string, Ideal
 	private parseCurrencyCode(content: string): IdealistaPriceInfo['currency'] {
 		let code: IdealistaPriceInfo['currency'] = 'UNKNOWN'
 
-		if (content.includes('$')) {
+		if (content.includes('$') || /USD|\$/.test(content)) {
 			code = 'USD'
-		} else if (content.includes('€')) {
+		} else if (content.includes('€') || /EUR|€/i.test(content)) {
 			code = 'EUR'
-		} else if (content.includes('£')) {
+		} else if (content.includes('£') || /GBP|£/.test(content)) {
 			code = 'GBP'
 		}
 

@@ -4,8 +4,10 @@ export { resolveParserWithPlugins, type ResolveParserResult } from './web-engine
 export {
 	IdealistaListParserPlugin,
 	type IdealistaAgencyInfo,
+	type IdealistaAveragePricePerSquareMeter,
 	type IdealistaListing,
 	type IdealistaListingDetails,
+	type IdealistaPaginationInfo,
 	type IdealistaPriceInfo,
 	type IdealistaListParseResult
 } from './plugins/idealista-list-parser.js'

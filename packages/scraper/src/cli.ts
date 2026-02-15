@@ -1,35 +1,11 @@
 #!/usr/bin/env node
 import { z } from 'zod'
-import { runListAction } from './actions/list.js'
+import { listArgsSchema, runListAction } from './actions/list.js'
 
 type ParsedArgs = {
   command: string
   options: Record<string, string>
 }
-
-const booleanFromCliSchema = z
-  .enum(['true', 'false'])
-  .transform(value => value === 'true')
-
-const listArgsSchema = z.object({
-  url: z.string().trim().min(1, 'Missing required option: --url'),
-  pretty: z
-    .preprocess(
-      value => {
-        if (value === undefined) {
-          return 'false'
-        }
-
-        if (typeof value === 'string') {
-          return value.toLowerCase()
-        }
-
-        return value
-      },
-      booleanFromCliSchema
-    )
-    .default(false)
-})
 
 const cliInputSchema = z.discriminatedUnion('command', [
   z.object({
@@ -91,14 +67,20 @@ Usage:
   cli help
   cli list --url="venta-viviendas/madrid-madrid/con-precio-hasta_360000,precio-desde_175000,metros-cuadrados-mas-de_40,solo-pisos,ascensor,plantas-intermedias,buen-estado/"
   cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/"
+  cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --maxPages=3
+  cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --headless=false
+  cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --outputFile="./tmp/listings.json"
   cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --pretty
 
 Commands:
   help    Show this help message
   list    Scrape an Idealista listing page and print parsed JSON
 
-Options:
+List options:
   --url   Required for list. Accepts full URL or idealista path.
+  --outputFile Optional for list. Writes JSON output to the given file path.
+  --maxPages Optional for list. Maximum number of pages to fetch (default: 1).
+  --headless Optional for list. Use false to show browser (default: true).
   --pretty Optional for list. Pretty-print JSON output.
 `)
 }
@@ -106,7 +88,7 @@ Options:
 async function main(): Promise<number> {
   const { command, options } = parseArgs(process.argv.slice(2))
   const parsedCliInput = cliInputSchema.safeParse({ command, options })
-
+    
   if (!parsedCliInput.success) {
     console.error(`Unknown command: ${command}`)
     printHelp()
@@ -127,7 +109,10 @@ async function main(): Promise<number> {
     }
 
     return runListAction(parsedListArgs.data.url, {
-      pretty: parsedListArgs.data.pretty
+      pretty: parsedListArgs.data.pretty,
+      maxPages: parsedListArgs.data.maxPages,
+      headless: parsedListArgs.data.headless,
+      outputFile: parsedListArgs.data.outputFile
     })
   }
 

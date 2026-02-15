@@ -401,7 +401,7 @@ export class UlixeeWebEngine extends WebEngine {
 
     const createProperties = {
       ...this.heroOptions,
-      showChrome: true,
+      showChrome: showBrowser,
       userProfile: userProfile
     } satisfies IHeroCreateOptions
 

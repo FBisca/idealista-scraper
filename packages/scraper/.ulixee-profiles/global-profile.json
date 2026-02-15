@@ -16,17 +16,6 @@
       "secure": true,
       "sameSite": "None",
       "sameParty": false,
-      "httpOnly": true,
-      "path": "/",
-      "domain": "www.idealista.com"
-    },
-    {
-      "name": "cookieSearch-1",
-      "value": "%2Fventa-viviendas%2Fmadrid-madrid%2Fcon-precio-hasta_360000%2Cprecio-desde_175000%2Cmetros-cuadrados-mas-de_40%2Csolo-pisos%2Cascensor%2Cplantas-intermedias%2Cbuen-estado%2F%3A1771150161416",
-      "secure": true,
-      "sameSite": "None",
-      "sameParty": false,
-      "expires": "2027-02-15T10:09:21.917Z",
       "httpOnly": false,
       "path": "/",
       "domain": "www.idealista.com"
@@ -37,7 +26,7 @@
       "secure": true,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2027-02-15T10:09:21.917Z",
+      "expires": "2027-02-15T10:41:09.502Z",
       "httpOnly": false,
       "path": "/",
       "domain": "www.idealista.com"
@@ -58,7 +47,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2027-03-22T10:09:22.030Z",
+      "expires": "2027-03-22T10:41:09.610Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".www.idealista.com"
@@ -66,7 +55,7 @@
     {
       "name": "didomi_token",
       "value": "eyJ1c2VyX2lkIjoiMTljNjBjNmItOTgwZS02NjI1LTg2Y2ItOWZjOTFlOWUwNGMwIiwiY3JlYXRlZCI6IjIwMjYtMDItMTVUMTA6MDk6MjIuMzA0WiIsInVwZGF0ZWQiOiIyMDI2LTAyLTE1VDEwOjA5OjIyLjMwNFoiLCJ2ZXJzaW9uIjpudWxsfQ==",
-      "secure": false,
+      "secure": true,
       "sameSite": "Lax",
       "sameParty": false,
       "expires": "2027-02-16T10:09:22.000Z",
@@ -80,7 +69,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2027-02-15T10:09:22.000Z",
+      "expires": "2027-02-15T10:41:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -91,18 +80,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
-      "httpOnly": false,
-      "path": "/",
-      "domain": ".idealista.com"
-    },
-    {
-      "name": "utag_main__pn",
-      "value": "1%3Bexp-session",
-      "secure": false,
-      "sameSite": "None",
-      "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
+      "expires": "2026-02-15T11:11:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -113,7 +91,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
+      "expires": "2026-02-15T11:11:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -124,7 +102,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
+      "expires": "2026-02-15T11:11:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -135,7 +113,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
+      "expires": "2026-02-15T11:11:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -146,7 +124,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
+      "expires": "2026-02-15T11:11:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -157,7 +135,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
+      "expires": "2026-02-15T11:11:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -168,29 +146,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
-      "httpOnly": false,
-      "path": "/",
-      "domain": ".idealista.com"
-    },
-    {
-      "name": "lang",
-      "value": "es",
-      "secure": true,
-      "sameSite": "None",
-      "sameParty": false,
-      "expires": "2027-02-15T10:09:22.508Z",
-      "httpOnly": false,
-      "path": "/",
-      "domain": "www.idealista.com"
-    },
-    {
-      "name": "utag_main__se",
-      "value": "2%3Bexp-session",
-      "secure": false,
-      "sameSite": "None",
-      "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
+      "expires": "2026-02-15T11:11:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -201,18 +157,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
-      "httpOnly": false,
-      "path": "/",
-      "domain": ".idealista.com"
-    },
-    {
-      "name": "utag_main__st",
-      "value": "1771151962955%3Bexp-session",
-      "secure": false,
-      "sameSite": "None",
-      "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
+      "expires": "2026-02-15T11:11:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -223,7 +168,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
+      "expires": "2026-02-15T11:11:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -234,7 +179,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2026-02-15T10:39:22.000Z",
+      "expires": "2026-02-15T11:11:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -245,7 +190,7 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "expires": "2027-02-15T10:09:22.000Z",
+      "expires": "2027-02-15T10:41:10.000Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -256,39 +201,6 @@
       "secure": false,
       "sameSite": "None",
       "sameParty": false,
-      "httpOnly": false,
-      "path": "/",
-      "domain": ".idealista.com"
-    },
-    {
-      "name": "__rtbh.uid",
-      "value": "%7B%22eventType%22%3A%22uid%22%2C%22id%22%3A%22unknown%22%2C%22expiryDate%22%3A%222027-02-15T10%3A09%3A23.029Z%22%7D",
-      "secure": true,
-      "sameSite": "None",
-      "sameParty": false,
-      "expires": "2027-02-15T10:09:23.000Z",
-      "httpOnly": false,
-      "path": "/",
-      "domain": "www.idealista.com"
-    },
-    {
-      "name": "__rtbh.lid",
-      "value": "%7B%22eventType%22%3A%22lid%22%2C%22id%22%3A%22xQGFRcBgw3bKJ1KV3TaA%22%2C%22expiryDate%22%3A%222027-02-15T10%3A09%3A23.029Z%22%7D",
-      "secure": true,
-      "sameSite": "None",
-      "sameParty": false,
-      "expires": "2027-02-15T10:09:23.000Z",
-      "httpOnly": false,
-      "path": "/",
-      "domain": "www.idealista.com"
-    },
-    {
-      "name": "datadome",
-      "value": "iYVK8oVrJm_pkA3iUQc71TBoVk~0bHPEXhosvlUZOCXjOS4_3Il4WPOsZQ~JTKqtdoSeWo~ZueW9cPuX87q1Zvdm_H~S8rsbiscE8SKHL6Q_uXehOUt6yqC1CeOv_~ni",
-      "secure": true,
-      "sameSite": "Lax",
-      "sameParty": false,
-      "expires": "2027-02-15T10:09:23.045Z",
       "httpOnly": false,
       "path": "/",
       "domain": ".idealista.com"
@@ -316,6 +228,94 @@
       "domain": ".www.idealista.com"
     },
     {
+      "name": "cookieSearch-1",
+      "value": "%2Fventa-viviendas%2Fmadrid-madrid%2Fcon-precio-hasta_360000%2Cprecio-desde_175000%2Cmetros-cuadrados-mas-de_40%2Csolo-pisos%2Cascensor%2Cplantas-intermedias%2Cbuen-estado%2F%3A1771152069271",
+      "secure": true,
+      "sameSite": "None",
+      "sameParty": false,
+      "expires": "2027-02-15T10:41:09.502Z",
+      "httpOnly": false,
+      "path": "/",
+      "domain": "www.idealista.com"
+    },
+    {
+      "name": "utag_main__pn",
+      "value": "9%3Bexp-session",
+      "secure": false,
+      "sameSite": "None",
+      "sameParty": false,
+      "expires": "2026-02-15T11:11:10.000Z",
+      "httpOnly": false,
+      "path": "/",
+      "domain": ".idealista.com"
+    },
+    {
+      "name": "lang",
+      "value": "es",
+      "secure": true,
+      "sameSite": "None",
+      "sameParty": false,
+      "expires": "2027-02-15T10:41:09.002Z",
+      "httpOnly": false,
+      "path": "/",
+      "domain": "www.idealista.com"
+    },
+    {
+      "name": "datadome",
+      "value": "D9UQ4GKiXINiClHVuv~CQuniH1vRSLhmM4TLCAXrC7HxUVUQqDd8WYcG_M95jgCJoD8alsXNyZ9q948lPNd6s271nW4Ou~DX_9de4xTI26gWGhBZkbEQ9rBWCdmc1dKU",
+      "secure": true,
+      "sameSite": "Lax",
+      "sameParty": false,
+      "expires": "2027-02-15T10:41:10.002Z",
+      "httpOnly": false,
+      "path": "/",
+      "domain": ".idealista.com"
+    },
+    {
+      "name": "utag_main__se",
+      "value": "18%3Bexp-session",
+      "secure": false,
+      "sameSite": "None",
+      "sameParty": false,
+      "expires": "2026-02-15T11:11:10.000Z",
+      "httpOnly": false,
+      "path": "/",
+      "domain": ".idealista.com"
+    },
+    {
+      "name": "utag_main__st",
+      "value": "1771153870047%3Bexp-session",
+      "secure": false,
+      "sameSite": "None",
+      "sameParty": false,
+      "expires": "2026-02-15T11:11:10.000Z",
+      "httpOnly": false,
+      "path": "/",
+      "domain": ".idealista.com"
+    },
+    {
+      "name": "__rtbh.uid",
+      "value": "%7B%22eventType%22%3A%22uid%22%2C%22id%22%3A%22unknown%22%2C%22expiryDate%22%3A%222027-02-15T10%3A41%3A10.089Z%22%7D",
+      "secure": true,
+      "sameSite": "None",
+      "sameParty": false,
+      "expires": "2027-02-15T10:41:10.000Z",
+      "httpOnly": false,
+      "path": "/",
+      "domain": "www.idealista.com"
+    },
+    {
+      "name": "__rtbh.lid",
+      "value": "%7B%22eventType%22%3A%22lid%22%2C%22id%22%3A%22xQGFRcBgw3bKJ1KV3TaA%22%2C%22expiryDate%22%3A%222027-02-15T10%3A41%3A10.089Z%22%7D",
+      "secure": true,
+      "sameSite": "None",
+      "sameParty": false,
+      "expires": "2027-02-15T10:41:10.000Z",
+      "httpOnly": false,
+      "path": "/",
+      "domain": "www.idealista.com"
+    },
+    {
       "name": "_pprv",
       "value": "eyJjb25zZW50Ijp7IjAiOnsibW9kZSI6Im9wdC1pbiJ9LCI3Ijp7Im1vZGUiOiJvcHQtaW4ifX0sInB1cnBvc2VzIjpudWxsLCJfdCI6Im4xYnh2M3NjfG1sbmwyczhjIn0%3D",
       "secure": true,
@@ -333,7 +333,7 @@
       "localStorage": [
         [
           "__rtbh.lid",
-          "{\"eventType\":\"lid\",\"id\":\"xQGFRcBgw3bKJ1KV3TaA\",\"expiryDate\":\"2027-02-15T10:09:23.029Z\"}"
+          "{\"eventType\":\"lid\",\"id\":\"xQGFRcBgw3bKJ1KV3TaA\",\"expiryDate\":\"2027-02-15T10:41:10.089Z\"}"
         ],
         [
           "didomi_token",
@@ -341,7 +341,7 @@
         ],
         [
           "__rtbh.uid",
-          "{\"eventType\":\"uid\",\"id\":\"unknown\",\"expiryDate\":\"2027-02-15T10:09:23.029Z\"}"
+          "{\"eventType\":\"uid\",\"id\":\"unknown\",\"expiryDate\":\"2027-02-15T10:41:10.089Z\"}"
         ]
       ],
       "sessionStorage": [
@@ -351,7 +351,7 @@
         ],
         [
           "__rtbh.lid",
-          "{\"eventType\":\"lid\",\"id\":\"xQGFRcBgw3bKJ1KV3TaA\",\"expiryDate\":\"2027-02-15T10:09:23.029Z\"}"
+          "{\"eventType\":\"lid\",\"id\":\"xQGFRcBgw3bKJ1KV3TaA\",\"expiryDate\":\"2027-02-15T10:41:10.089Z\"}"
         ],
         [
           "geoReachPosition",
@@ -359,11 +359,11 @@
         ],
         [
           "__rtbh.uid",
-          "{\"eventType\":\"uid\",\"id\":\"unknown\",\"expiryDate\":\"2027-02-15T10:09:23.029Z\"}"
+          "{\"eventType\":\"uid\",\"id\":\"unknown\",\"expiryDate\":\"2027-02-15T10:41:10.089Z\"}"
         ],
         [
           "geoReachCache",
-          "{\"{\\\"location\\\":\\\"madrid-madrid\\\",\\\"filterParams\\\":{\\\"minPrice\\\":\\\"175000\\\",\\\"maxPrice\\\":\\\"360000\\\",\\\"minArea\\\":\\\"40\\\",\\\"subtypologyOnlyFlats\\\":true}}\":{\"data\":{\"title\":\"Obras nuevas con tus filtros cerca de la zona que buscas\",\"ads\":[{\"adId\":109301423,\"thumbnails\":{\"thumbnail\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/ee/b9/15/1370383288.jpg\",\"thumbnailWebp\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/ee/b9/15/1370383288.webp\",\"thumbnailMobile\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/ee/b9/15/1370383288.jpg\",\"thumbnailMobileWebp\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/ee/b9/15/1370383288.webp\"},\"ribbons\":[\"Obra nueva\"],\"distance\":\"2861.312720657226\",\"address\":\"Piso en Camino Pocito San Roque, 4\",\"detailUrl\":\"/inmueble/109301423/\",\"price\":351750,\"features\":[\"1 hab.\",\"61 m²\"],\"preferredContactMethod\":\"ALL\",\"isFavorite\":false},{\"adId\":109590969,\"thumbnails\":{\"thumbnail\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/c0/d0/4f/1381264233.jpg\",\"thumbnailWebp\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/c0/d0/4f/1381264233.webp\",\"thumbnailMobile\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/c0/d0/4f/1381264233.jpg\",\"thumbnailMobileWebp\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/c0/d0/4f/1381264233.webp\"},\"ribbons\":[\"Obra nueva\"],\"distance\":\"9160.549879244698\",\"address\":\"Piso en Calle Las Vallas, 12\",\"detailUrl\":\"/inmueble/109590969/\",\"price\":215000,\"features\":[\"1 hab.\",\"50 m²\",\"Bajo ext. Con ascensor\"],\"preferredContactMethod\":\"ALL\",\"isFavorite\":false},{\"adId\":110620215,\"thumbnails\":{\"thumbnail\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/12/d9/6a/1410397981.jpg\",\"thumbnailWebp\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/12/d9/6a/1410397981.webp\",\"thumbnailMobile\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/12/d9/6a/1410397981.jpg\",\"thumbnailMobileWebp\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/12/d9/6a/1410397981.webp\"},\"ribbons\":[\"Obra nueva\"],\"distance\":\"9903.23089022159\",\"address\":\"Piso en Calle Valle De Aran, 4\",\"detailUrl\":\"/inmueble/110620215/\",\"price\":353779,\"features\":[\"3 hab.\",\"109 m²\"],\"preferredContactMethod\":\"ALL\",\"isFavorite\":false}],\"saveSearchCardInfo\":{\"staticMapUrl\":\"https://maps3.idealista.com/maps/api/staticmap?path=weight%3A2%7Ccolor%3A0xb62682ff%7Cfillcolor%3A0xb6268240%7Cenc%3AekkvFplkWexA%7Ce%40k%5C%7CGkxB%7CQsxByNsr%40cUu%7CAeYceByx%40ozAerAelAchBqb%40ez%40i%7E%40_cCwg%40oqCEWi%40aFuE%7Bc%40eDeo%40a%5Csj%40ow%40cbC%7BOcdA%7Bf%40%7DwAaAqECKw%5EwtBcOazB%5DgMx%40ouC%7EW%7DqCtg%40ouBpCme%40aJuT%7Di%40_jCuSorClA%7DtCjXgqCjn%40mgChFgLFoCl%5CwnCvq%40_dC%7EdA_tBluAc_Bh%60%40_WhJ%7DMhyA_oA%7EIcEXWvjBe_ArrBc%60%40%7CoBUdi%40%7DfAzwAubBteBkhAtF_Bx%5Bo%5B%7Cx%40ab%40vX_Tf%7C%40o%5EvIcIt_Bwy%40%60OmF%60eBq%60%40bhBaGni%40dFj%40Eh%7BAnI%7Cm%40gX%7EiByZtNA%7CkAkIn%60ArFpONvHpArNx%40vMrBKpAvVhEFk%40xc%40%7CHviBrj%40%7E%60BfeAntAd%7DA%7COzZljAxg%40hhAz_ApFT%7ElBhg%40ndBlcAxwAt%7CApgAdrBft%40zbCx%5EbnCdQ%7C%60C%7EDbu%40Dz%40bBdyAEnKY%3FTnKsOzyCsLbfA%7Bb%40%7EbCkDzJfI%7Cj%40rJvbCwEhcCeQf%7DAwAlQF%40g%40%7EG_CnXm%40jGGt%40ERc%40nEgBvKaAdHGAm%5DjvBax%40%7C_CwjAfnBcUpT%7DWh_%40oH%7EfAcXjsAkE%60s%40og%40%7CjCk%7C%40l%7DBunApjBu%7DAhsAag%40xTaAx%40yE%7CDc%40iA%7DExBwu%40dn%40Xx%40%7D_%40zW%5DVgBlAmNdJaHhE%7DD%60CgTlMauA%60n%40yyAzZeFl%40%7DqBxEspB%7DVwn%40%7BVsyAjn%40khBjYo%5BAsB%5CgSHeSvOuNfIkfBvr%40as%40rJs%5BzRqiA%60jAi%7EAt%7D%40%7DQ%60F&size=520x390&map_id=f1fde9e0453d8363&format=png&maptype=roadmap&language=es&key=AIzaSyCyCjWoBYs1Zq5CLJhDdWHtkH4I3kBCCPc&signature=9JzCnC2W3y5ew6W66A_kgr7VQLc=\",\"filterSummary\":[\"175.000 a 360.000 eur\",\"Con más de 40 metros cuadrados\",\"Pisos y apartamentos\",\"Estado: Obra nueva\"],\"searchTitle\":\"Obra nueva en Madrid y alrededores\",\"searchUrl\":\"/areas/venta-viviendas/con-obra-nueva,precio-desde_175000,precio-hasta_360000,metros-cuadrados-mas-de_40,pisos/?shape=%2528%2528ekkvFplkWexA%257Ce%2540k%255C%257CGkxB%257CQsxByNsr%2540cUu%257CAeYceByx%2540ozAerAelAchBqb%2540ez%2540i%257E%2540_cCwg%2540oqCEWi%2540aFuE%257Bc%2540eDeo%2540a%255Csj%2540ow%2540cbC%257BOcdA%257Bf%2540%257DwAaAqECKw%255EwtBcOazB%255DgMx%2540ouC%257EW%257DqCtg%2540ouBpCme%2540aJuT%257Di%2540_jCuSorClA%257DtCjXgqCjn%2540mgChFgLFoCl%255CwnCvq%2540_dC%257EdA_tBluAc_Bh%2560%2540_WhJ%257DMhyA_oA%257EIcEXWvjBe_ArrBc%2560%2540%257CoBUdi%2540%257DfAzwAubBteBkhAtF_Bx%255Bo%255B%257Cx%2540ab%2540vX_Tf%257C%2540o%255EvIcIt_Bwy%2540%2560OmF%2560eBq%2560%2540bhBaGni%2540dFj%2540Eh%257BAnI%257Cm%2540gX%257EiByZtNA%257CkAkIn%2560ArFpONvHpArNx%2540vMrBKpAvVhEFk%2540xc%2540%257CHviBrj%2540%257E%2560BfeAntAd%257DA%257COzZljAxg%2540hhAz_ApFT%257ElBhg%2540ndBlcAxwAt%257CApgAdrBft%2540zbCx%255EbnCdQ%257C%2560C%257EDbu%2540Dz%2540bBdyAEnKY%253FTnKsOzyCsLbfA%257Bb%2540%257EbCkDzJfI%257Cj%2540rJvbCwEhcCeQf%257DAwAlQF%2540g%2540%257EG_CnXm%2540jGGt%2540ERc%2540nEgBvKaAdHGAm%255DjvBax%2540%257C_CwjAfnBcUpT%257DWh_%2540oH%257EfAcXjsAkE%2560s%2540og%2540%257CjCk%257C%2540l%257DBunApjBu%257DAhsAag%2540xTaAx%2540yE%257CDc%2540iA%257DExBwu%2540dn%2540Xx%2540%257D_%2540zW%255DVgBlAmNdJaHhE%257DD%2560CgTlMauA%2560n%2540yyAzZeFl%2540%257DqBxEspB%257DVwn%2540%257BVsyAjn%2540khBjYo%255BAsB%255CgSHeSvOuNfIkfBvr%2540as%2540rJs%255BzRqiA%2560jAi%257EAt%257D%2540%257DQ%2560F%2529%2529\",\"isSearchAlreadySaved\":false}},\"locale\":\"es\",\"time\":1771150162963}}"
+          "{\"{\\\"location\\\":\\\"madrid-madrid\\\",\\\"filterParams\\\":{\\\"minPrice\\\":\\\"175000\\\",\\\"maxPrice\\\":\\\"360000\\\",\\\"minArea\\\":\\\"40\\\",\\\"subtypologyOnlyFlats\\\":true}}\":{\"data\":{\"title\":\"Obras nuevas con tus filtros cerca de la zona que buscas\",\"ads\":[{\"adId\":109301423,\"thumbnails\":{\"thumbnail\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/ee/b9/15/1370383288.jpg\",\"thumbnailWebp\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/ee/b9/15/1370383288.webp\",\"thumbnailMobile\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/ee/b9/15/1370383288.jpg\",\"thumbnailMobileWebp\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/ee/b9/15/1370383288.webp\"},\"ribbons\":[\"Obra nueva\"],\"distance\":\"2861.312720657226\",\"address\":\"Piso en Camino Pocito San Roque, 4\",\"detailUrl\":\"/inmueble/109301423/\",\"price\":351750,\"features\":[\"1 hab.\",\"61 m²\"],\"preferredContactMethod\":\"ALL\",\"isFavorite\":false},{\"adId\":109590969,\"thumbnails\":{\"thumbnail\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/c0/d0/4f/1381264233.jpg\",\"thumbnailWebp\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/c0/d0/4f/1381264233.webp\",\"thumbnailMobile\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/c0/d0/4f/1381264233.jpg\",\"thumbnailMobileWebp\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/c0/d0/4f/1381264233.webp\"},\"ribbons\":[\"Obra nueva\"],\"distance\":\"9160.549879244698\",\"address\":\"Piso en Calle Las Vallas, 12\",\"detailUrl\":\"/inmueble/109590969/\",\"price\":215000,\"features\":[\"1 hab.\",\"50 m²\",\"Bajo ext. Con ascensor\"],\"preferredContactMethod\":\"ALL\",\"isFavorite\":false},{\"adId\":110620215,\"thumbnails\":{\"thumbnail\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/12/d9/6a/1410397981.jpg\",\"thumbnailWebp\":\"https://img4.idealista.com/blur/591_420_mq/0/id.pro.es.image.master/12/d9/6a/1410397981.webp\",\"thumbnailMobile\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/12/d9/6a/1410397981.jpg\",\"thumbnailMobileWebp\":\"https://img4.idealista.com/blur/340_280_mq/0/id.pro.es.image.master/12/d9/6a/1410397981.webp\"},\"ribbons\":[\"Obra nueva\"],\"distance\":\"9903.23089022159\",\"address\":\"Piso en Calle Valle De Aran, 4\",\"detailUrl\":\"/inmueble/110620215/\",\"price\":353779,\"features\":[\"3 hab.\",\"109 m²\"],\"preferredContactMethod\":\"ALL\",\"isFavorite\":false}],\"saveSearchCardInfo\":{\"staticMapUrl\":\"https://maps3.idealista.com/maps/api/staticmap?path=weight%3A2%7Ccolor%3A0xb62682ff%7Cfillcolor%3A0xb6268240%7Cenc%3AekkvFplkWexA%7Ce%40k%5C%7CGkxB%7CQsxByNsr%40cUu%7CAeYceByx%40ozAerAelAchBqb%40ez%40i%7E%40_cCwg%40oqCEWi%40aFuE%7Bc%40eDeo%40a%5Csj%40ow%40cbC%7BOcdA%7Bf%40%7DwAaAqECKw%5EwtBcOazB%5DgMx%40ouC%7EW%7DqCtg%40ouBpCme%40aJuT%7Di%40_jCuSorClA%7DtCjXgqCjn%40mgChFgLFoCl%5CwnCvq%40_dC%7EdA_tBluAc_Bh%60%40_WhJ%7DMhyA_oA%7EIcEXWvjBe_ArrBc%60%40%7CoBUdi%40%7DfAzwAubBteBkhAtF_Bx%5Bo%5B%7Cx%40ab%40vX_Tf%7C%40o%5EvIcIt_Bwy%40%60OmF%60eBq%60%40bhBaGni%40dFj%40Eh%7BAnI%7Cm%40gX%7EiByZtNA%7CkAkIn%60ArFpONvHpArNx%40vMrBKpAvVhEFk%40xc%40%7CHviBrj%40%7E%60BfeAntAd%7DA%7COzZljAxg%40hhAz_ApFT%7ElBhg%40ndBlcAxwAt%7CApgAdrBft%40zbCx%5EbnCdQ%7C%60C%7EDbu%40Dz%40bBdyAEnKY%3FTnKsOzyCsLbfA%7Bb%40%7EbCkDzJfI%7Cj%40rJvbCwEhcCeQf%7DAwAlQF%40g%40%7EG_CnXm%40jGGt%40ERc%40nEgBvKaAdHGAm%5DjvBax%40%7C_CwjAfnBcUpT%7DWh_%40oH%7EfAcXjsAkE%60s%40og%40%7CjCk%7C%40l%7DBunApjBu%7DAhsAag%40xTaAx%40yE%7CDc%40iA%7DExBwu%40dn%40Xx%40%7D_%40zW%5DVgBlAmNdJaHhE%7DD%60CgTlMauA%60n%40yyAzZeFl%40%7DqBxEspB%7DVwn%40%7BVsyAjn%40khBjYo%5BAsB%5CgSHeSvOuNfIkfBvr%40as%40rJs%5BzRqiA%60jAi%7EAt%7D%40%7DQ%60F&size=520x390&map_id=f1fde9e0453d8363&format=png&maptype=roadmap&language=es&key=AIzaSyCyCjWoBYs1Zq5CLJhDdWHtkH4I3kBCCPc&signature=9JzCnC2W3y5ew6W66A_kgr7VQLc=\",\"filterSummary\":[\"175.000 a 360.000 eur\",\"Con más de 40 metros cuadrados\",\"Pisos y apartamentos\",\"Estado: Obra nueva\"],\"searchTitle\":\"Obra nueva en Madrid y alrededores\",\"searchUrl\":\"/areas/venta-viviendas/con-obra-nueva,precio-desde_175000,precio-hasta_360000,metros-cuadrados-mas-de_40,pisos/?shape=%2528%2528ekkvFplkWexA%257Ce%2540k%255C%257CGkxB%257CQsxByNsr%2540cUu%257CAeYceByx%2540ozAerAelAchBqb%2540ez%2540i%257E%2540_cCwg%2540oqCEWi%2540aFuE%257Bc%2540eDeo%2540a%255Csj%2540ow%2540cbC%257BOcdA%257Bf%2540%257DwAaAqECKw%255EwtBcOazB%255DgMx%2540ouC%257EW%257DqCtg%2540ouBpCme%2540aJuT%257Di%2540_jCuSorClA%257DtCjXgqCjn%2540mgChFgLFoCl%255CwnCvq%2540_dC%257EdA_tBluAc_Bh%2560%2540_WhJ%257DMhyA_oA%257EIcEXWvjBe_ArrBc%2560%2540%257CoBUdi%2540%257DfAzwAubBteBkhAtF_Bx%255Bo%255B%257Cx%2540ab%2540vX_Tf%257C%2540o%255EvIcIt_Bwy%2540%2560OmF%2560eBq%2560%2540bhBaGni%2540dFj%2540Eh%257BAnI%257Cm%2540gX%257EiByZtNA%257CkAkIn%2560ArFpONvHpArNx%2540vMrBKpAvVhEFk%2540xc%2540%257CHviBrj%2540%257E%2560BfeAntAd%257DA%257COzZljAxg%2540hhAz_ApFT%257ElBhg%2540ndBlcAxwAt%257CApgAdrBft%2540zbCx%255EbnCdQ%257C%2560C%257EDbu%2540Dz%2540bBdyAEnKY%253FTnKsOzyCsLbfA%257Bb%2540%257EbCkDzJfI%257Cj%2540rJvbCwEhcCeQf%257DAwAlQF%2540g%2540%257EG_CnXm%2540jGGt%2540ERc%2540nEgBvKaAdHGAm%255DjvBax%2540%257C_CwjAfnBcUpT%257DWh_%2540oH%257EfAcXjsAkE%2560s%2540og%2540%257CjCk%257C%2540l%257DBunApjBu%257DAhsAag%2540xTaAx%2540yE%257CDc%2540iA%257DExBwu%2540dn%2540Xx%2540%257D_%2540zW%255DVgBlAmNdJaHhE%257DD%2560CgTlMauA%2560n%2540yyAzZeFl%2540%257DqBxEspB%257DVwn%2540%257BVsyAjn%2540khBjYo%255BAsB%255CgSHeSvOuNfIkfBvr%2540as%2540rJs%255BzRqiA%2560jAi%257EAt%257D%2540%257DQ%2560F%2529%2529\",\"isSearchAlreadySaved\":false}},\"locale\":\"es\",\"time\":1771152070039}}"
         ],
         [
           "lastListingPage",
@@ -371,7 +371,7 @@
         ],
         [
           "lastGeoReachs",
-          "[{\"location\":\"madrid-madrid\",\"filterParams\":{\"minPrice\":\"175000\",\"maxPrice\":\"360000\",\"minArea\":\"40\",\"subtypologyOnlyFlats\":true}}]"
+          "[{\"location\":\"madrid-madrid\",\"filterParams\":{\"minPrice\":\"175000\",\"maxPrice\":\"360000\",\"minArea\":\"40\",\"subtypologyOnlyFlats\":true}},{\"location\":\"madrid-madrid\",\"filterParams\":{\"minPrice\":\"175000\",\"maxPrice\":\"360000\",\"minArea\":\"40\",\"subtypologyOnlyFlats\":true}}]"
         ]
       ]
     }
