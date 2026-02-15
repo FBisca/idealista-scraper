@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { IdealistaDetailParserPlugin } from './idealista-detail-parser.js';
+import type { InteractiveParseContext } from '../web-engine/types.js';
 
 const detailHtml = readFileSync(
   resolve(import.meta.dirname, '__fixtures__/idealista-detail.html'),
@@ -9,6 +10,17 @@ const detailHtml = readFileSync(
 );
 
 const sourceUrl = 'https://www.idealista.com/inmueble/110641394/';
+const parseContext: InteractiveParseContext = {
+  engine: 'ulixee',
+  requestUrl: sourceUrl,
+  interaction: {
+    click: async () => undefined,
+    waitForSelector: async () => true,
+    evaluate: async <ResultType>() => undefined as ResultType,
+    getHtml: async () => detailHtml,
+    getUrl: async () => 'https://example.com',
+  },
+};
 
 describe('IdealistaDetailParserPlugin', () => {
   it('applies for idealista detail pages', () => {
@@ -56,7 +68,10 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts id, title, and subtitle', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.id).toBe('110641394');
     expect(result.title).toBe('Piso en venta en CL Embajadores');
@@ -67,7 +82,10 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts pricing with price per sqm', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.pricing).toMatchObject({
       price: 290000,
@@ -78,7 +96,10 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts basic features', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.basicFeatures.constructedAreaSqm).toBe(91);
     expect(result.basicFeatures.rooms).toBe(2);
@@ -96,7 +117,10 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts building features', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.buildingFeatures).toBeDefined();
     expect(result.buildingFeatures?.floor).toBe('Planta 2ª');
@@ -110,7 +134,10 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts energy certificate ratings', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.energyCertificate).toMatchObject({
       consumption: 'D',
@@ -120,7 +147,10 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts location with coordinates', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.location.street).toBe('CL EMBAJADORES');
     expect(result.location.barrio).toBe('Barrio Delicias');
@@ -137,10 +167,13 @@ describe('IdealistaDetailParserPlugin', () => {
       /(<img[^>]*id="sMap"[^>]*?)\s+src="[^"]*"/i,
       '$1',
     );
-    const result = await plugin.extract({
-      url: sourceUrl,
-      data: htmlWithoutSMapSrc,
-    });
+    const result = await plugin.extract(
+      {
+        url: sourceUrl,
+        data: htmlWithoutSMapSrc,
+      },
+      parseContext,
+    );
 
     expect(result.location.latitude).toBeCloseTo(40.3965, 3);
     expect(result.location.longitude).toBeCloseTo(-3.6969, 3);
@@ -148,7 +181,10 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts description from advertiser comment', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.description).toBeDefined();
     expect(result.description).toContain('OPORTUNIDAD PARA INVERSORES');
@@ -157,7 +193,10 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts tags and housing situation', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.tags).toContain('Ocupada ilegalmente');
     expect(result.housingSituation).toEqual(['Ocupada ilegalmente']);
@@ -165,7 +204,10 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts advertiser info', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.advertiser.name).toBe('Paula');
     expect(result.advertiser.type).toBe('Profesional');
@@ -177,7 +219,10 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts photos count and map availability', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.photosCount).toBe(4);
     expect(result.hasMap).toBe(true);
@@ -189,9 +234,36 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts last update text', async () => {
     const plugin = new IdealistaDetailParserPlugin();
-    const result = await plugin.extract({ url: sourceUrl, data: detailHtml });
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      parseContext,
+    );
 
     expect(result.lastUpdateText).toBeDefined();
     expect(result.lastUpdateText).toContain('Anuncio actualizado');
+  });
+
+  it('uses interaction adapter HTML when available during extract', async () => {
+    const plugin = new IdealistaDetailParserPlugin();
+    const interactiveHtml = `<div class="main-info__title-main">Piso interactivo</div>${detailHtml}`;
+
+    const context: InteractiveParseContext = {
+      engine: 'ulixee-hero',
+      requestUrl: sourceUrl,
+      interaction: {
+        click: async () => undefined,
+        waitForSelector: async () => true,
+        evaluate: async <ResultType>() => undefined as ResultType,
+        getHtml: async () => interactiveHtml,
+        getUrl: async () => sourceUrl,
+      },
+    };
+
+    const result = await plugin.extract(
+      { url: sourceUrl, data: detailHtml },
+      context,
+    );
+
+    expect(result.title).toBe('Piso interactivo');
   });
 });

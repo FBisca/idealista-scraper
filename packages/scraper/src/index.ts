@@ -1,14 +1,18 @@
-export { UlixeeWebEngine } from "./web-engine/ulixee-engine.js";
+export { UlixeeWebEngine } from './web-engine/ulixee-engine.js';
 export {
   ContentParserPlugin,
+  InteractiveContentParserPlugin,
   WebContentParser,
+  type InteractiveWebContentParser,
   type ParseContext,
-  type WebContent
-} from "./web-engine/types.js";
+  type InteractiveParseContext,
+  type InteractionAdapter,
+  type WebContent,
+} from './web-engine/types.js';
 export {
   resolveParserWithPlugins,
-  type ResolveParserResult
-} from "./web-engine/parser-resolver.js";
+  type ResolveParserResult,
+} from './web-engine/parser-resolver.js';
 export {
   IdealistaListParserPlugin,
   type IdealistaAgencyInfo,
@@ -17,8 +21,8 @@ export {
   type IdealistaListingDetails,
   type IdealistaPaginationInfo,
   type IdealistaPriceInfo,
-  type IdealistaListParseResult
-} from "./plugins/idealista-list-parser.js";
+  type IdealistaListParseResult,
+} from './plugins/idealista-list-parser.js';
 export {
   IdealistaDetailParserPlugin,
   type IdealistaDetailAdvertiser,
@@ -27,6 +31,6 @@ export {
   type IdealistaDetailEnergyCertificate,
   type IdealistaDetailLocation,
   type IdealistaDetailParseResult,
-  type IdealistaDetailPricing
-} from "./plugins/idealista-detail-parser.js";
-export type { SearchResult } from "./web-engine/search/types.js";
+  type IdealistaDetailPricing,
+} from './plugins/idealista-detail-parser.js';
+export type { SearchResult } from './web-engine/search/types.js';

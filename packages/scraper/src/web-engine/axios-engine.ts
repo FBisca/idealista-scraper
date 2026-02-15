@@ -2,8 +2,8 @@ import axios from 'axios'
 import https from 'https'
 import http from 'http'
 import { log } from '@workspace/logger'
-import { resolveParserWithPlugins } from './parser-resolver.js'
-import { FetchContentOptions, FetchResponse, ParseContext, WebEngine } from './types.js'
+import { ParserInteractionUnsupportedError, resolveParserWithPlugins } from './parser-resolver.js'
+import { FetchContentOptions, FetchResponse, ParseContext, WebContentParser, WebEngine } from './types.js'
 
 /**
  * Axios-based web search implementation
@@ -66,7 +66,10 @@ export class AxiosWebEngine extends WebEngine {
     })
   }
 
-  async fetchContent<T>(url: string, options: FetchContentOptions<T>): Promise<FetchResponse<T>> {
+  async fetchContent<T>(
+    url: string,
+    options: FetchContentOptions<T, WebContentParser<string, T>>
+  ): Promise<FetchResponse<T>> {
     const startTime = Date.now()
 
     try {
@@ -131,6 +134,20 @@ export class AxiosWebEngine extends WebEngine {
         }
       }
     } catch (error) {
+      if (error instanceof ParserInteractionUnsupportedError) {
+        return {
+          success: false,
+          errorCode: 'unsupported-interaction',
+          error: error.message,
+          metadata: {
+            duration: Date.now() - startTime,
+            method: 'axios',
+            parserName: error.parserName,
+            engine: error.engine
+          }
+        }
+      }
+
       const errorMessage = error instanceof Error ? error.message : String(error)
       log.error('[Axios Engine] Fetch content failed:', errorMessage)
 

@@ -1,6 +1,9 @@
 import * as cheerio from 'cheerio';
 import {
   ContentParserPlugin,
+  InteractiveContentParserPlugin,
+  InteractiveParseContext,
+  type ParseContext,
   type PluginEvaluation,
   type WebContent,
 } from '../web-engine/types.js';
@@ -72,7 +75,7 @@ export interface IdealistaDetailParseResult {
   lastUpdateText?: string;
 }
 
-export class IdealistaDetailParserPlugin extends ContentParserPlugin<
+export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
   string,
   IdealistaDetailParseResult
 > {
@@ -91,8 +94,10 @@ export class IdealistaDetailParserPlugin extends ContentParserPlugin<
 
   public async extract(
     content: WebContent<string>,
+    context: InteractiveParseContext,
   ): Promise<IdealistaDetailParseResult> {
-    const $ = cheerio.load(content.data);
+    const html = await this.resolveHtml(content.data, context);
+    const $ = cheerio.load(html);
 
     const id = this.extractId($, content.url);
     const title = this.normalizeText(
@@ -106,7 +111,7 @@ export class IdealistaDetailParserPlugin extends ContentParserPlugin<
     const basicFeatures = this.extractBasicFeatures($);
     const buildingFeatures = this.extractBuildingFeatures($);
     const energyCertificate = this.extractEnergyCertificate($);
-    const location = this.extractLocation($, content.data);
+    const location = this.extractLocation($, html);
     const description = this.extractDescription($);
     const tags = this.extractTags($);
     const housingSituation = this.extractHousingSituation($);
@@ -142,6 +147,38 @@ export class IdealistaDetailParserPlugin extends ContentParserPlugin<
       hasMap,
       ...(lastUpdateText ? { lastUpdateText } : {}),
     };
+  }
+
+  private async resolveHtml(
+    fallbackHtml: string,
+    context: InteractiveParseContext,
+  ): Promise<string> {
+    const interaction = context.interaction;
+
+    const candidateSelectors = [
+      '.comment button',
+      '.comment [data-test="show-more"]',
+      '.comment [aria-expanded="false"]',
+    ];
+
+    for (const selector of candidateSelectors) {
+      const exists = await interaction.waitForSelector(selector, 300);
+      if (!exists) {
+        continue;
+      }
+
+      try {
+        await interaction.click(selector);
+        const html = await interaction.getHtml();
+        if (this.optionalText(html)) {
+          return html;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return fallbackHtml;
   }
 
   private extractId($: cheerio.CheerioAPI, url: string): string {
