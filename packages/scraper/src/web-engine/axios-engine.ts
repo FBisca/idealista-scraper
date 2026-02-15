@@ -2,7 +2,8 @@ import axios from 'axios'
 import https from 'https'
 import http from 'http'
 import { log } from '@workspace/logger'
-import { FetchContentOptions, FetchResponse, WebEngine } from './types.js'
+import { resolveParserWithPlugins } from './parser-resolver.js'
+import { FetchContentOptions, FetchResponse, ParseContext, WebEngine } from './types.js'
 
 /**
  * Axios-based web search implementation
@@ -66,7 +67,6 @@ export class AxiosWebEngine extends WebEngine {
   }
 
   async fetchContent<T>(url: string, options: FetchContentOptions<T>): Promise<FetchResponse<T>> {
-    const { htmlParser } = options
     const startTime = Date.now()
 
     try {
@@ -97,10 +97,27 @@ export class AxiosWebEngine extends WebEngine {
         }
       }
 
-      const content = await htmlParser.extract({
-        url,
-        data: response.data
-      })
+      const parseContext: ParseContext = {
+        engine: 'axios',
+        requestUrl: url,
+        finalUrl: response.request?.res?.responseUrl ?? url,
+        request: {
+          headers: updatedHeaders
+        },
+        response: {
+          statusCode: response.status,
+          headers: response.headers
+        }
+      }
+
+      const { content, pluginName } = await resolveParserWithPlugins(
+        {
+          url,
+          data: response.data
+        },
+        options,
+        parseContext
+      )
 
       return {
         success: true,
@@ -109,7 +126,8 @@ export class AxiosWebEngine extends WebEngine {
         metadata: {
           duration: Date.now() - startTime,
           method: 'axios',
-          responseStatus: response.status
+          responseStatus: response.status,
+          parserPlugin: pluginName
         }
       }
     } catch (error) {

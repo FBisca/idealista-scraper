@@ -3,7 +3,8 @@ import { IUserProfile, type IHeroCreateOptions } from '@ulixee/hero'
 import { Hero } from '@ulixee/hero/lib/extendables'
 import { extractDomain } from '../utils/url.js'
 import { UlixeeProfileManager } from './ulixee-profile-manager.js'
-import { FetchContentOptions, FetchResponse, WebEngine } from './types.js'
+import { resolveParserWithPlugins } from './parser-resolver.js'
+import { FetchContentOptions, FetchResponse, ParseContext, WebEngine } from './types.js'
 import { CaptchaDectector } from './captcha-detector.js'
 
 type Instance = {
@@ -79,6 +80,7 @@ export class UlixeeWebEngine extends WebEngine {
       const currentUrl = await hero.url
       const title = await hero.document.title
       const html = await hero.document.documentElement.outerHTML
+      const sessionId = await hero.sessionId
 
       // Check if page has CAPTCHA indicators
       const captchaSelector = await this.captchaDetector.detect(currentUrl, html)
@@ -114,8 +116,29 @@ export class UlixeeWebEngine extends WebEngine {
         }
       }
 
-      // Use appropriate extractor based on content type
-      const contentExtracted = await htmlParser.extract({ url: currentUrl, data: html })
+      const parseContext: ParseContext = {
+        engine: 'ulixee-hero',
+        requestUrl: url,
+        finalUrl: currentUrl,
+        page: {
+          title,
+          html,
+          domain,
+          captchaSelector: captchaSelector
+        },
+        runtime: {
+          showBrowser,
+          retry,
+          sessionId
+        }
+      }
+
+      // Use plugin-based parsing if any plugin applies, otherwise fallback to htmlParser
+      const { content: contentExtracted, pluginName } = await resolveParserWithPlugins(
+        { url: currentUrl, data: html },
+        { ...options, htmlParser },
+        parseContext
+      )
 
       log.info(`[Ulixee Hero] Successfully extracted content from ${currentUrl}`)
 
@@ -140,7 +163,8 @@ export class UlixeeWebEngine extends WebEngine {
           duration: Date.now() - startTime,
           method: 'ulixee-hero',
           showBrowser,
-          sessionId: await hero.sessionId,
+          sessionId,
+          parserPlugin: pluginName,
           domain
         }
       }
