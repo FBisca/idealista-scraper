@@ -40,9 +40,54 @@ Some dependencies need native artifacts at install time:
 
 ## Run
 
+Necessary to start the Browser instance before scraping
+
 ```bash
 pnpm browser:start
 ```
+
+## CLI usage
+
+Show help:
+
+```bash
+pnpm cli:help
+```
+
+List command examples:
+
+```bash
+pnpm cli list --url="venta-viviendas/madrid-madrid/con-precio-hasta_360000,precio-desde_175000,metros-cuadrados-mas-de_40,solo-pisos,ascensor,plantas-intermedias,buen-estado/"
+pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/"
+pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --maxPages=3
+pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --sortBy=lowest-price
+pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --skipPages=2
+pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --headless=false
+pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --outputFile="./tmp/listings.json"
+pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --pretty
+```
+
+List options:
+
+- `--url` Required. Accepts full URL or Idealista path.
+- `--outputFile` Optional. Writes JSON output to the given file path.
+- `--sortBy` Optional. One of:
+  - `relevance`
+  - `lowest-price`
+  - `highest-price`
+  - `newest`
+  - `oldest`
+  - `biggest-price-drop`
+  - `lowest-price-per-sqm`
+  - `highest-price-per-sqm`
+  - `largest-area`
+  - `smallest-area`
+  - `highest-floor`
+  - `lowest-floor`
+- `--maxPages` Optional. Maximum number of pages to fetch (default: `1`).
+- `--skipPages` Optional. Starts at `pagina-(skipPages+1).htm` (default: `0`).
+- `--headless` Optional. Use `false` to show browser (default: `true`).
+- `--pretty` Optional. Pretty-print JSON output.
 
 ## Quality checks
 

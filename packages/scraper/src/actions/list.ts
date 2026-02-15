@@ -13,6 +13,40 @@ import { formatJson } from "../utils/json.js";
 
 const booleanFromCliSchema = z.enum(["true", "false"]).transform((value) => value === "true");
 
+const listSortSchema = z.enum([
+  "relevance",
+  "lowest-price",
+  "highest-price",
+  "newest",
+  "oldest",
+  "biggest-price-drop",
+  "lowest-price-per-sqm",
+  "highest-price-per-sqm",
+  "largest-area",
+  "smallest-area",
+  "highest-floor",
+  "lowest-floor"
+]);
+
+const sortByToQueryValue: Record<z.infer<typeof listSortSchema>, string | undefined> = {
+  relevance: undefined,
+  "lowest-price": "precios-asc",
+  "highest-price": "precios-desc",
+  newest: "fecha-publicacion-desc",
+  oldest: "fecha-publicacion-asc",
+  "biggest-price-drop": "rebajas-desc",
+  "lowest-price-per-sqm": "precio-metro-cuadrado-asc",
+  "highest-price-per-sqm": "precio-metro-cuadrado-desc",
+  "largest-area": "area-desc",
+  "smallest-area": "area-asc",
+  "highest-floor": "planta-desc",
+  "lowest-floor": "planta-asc"
+};
+
+const allSortQueryValues = Object.values(sortByToQueryValue).filter((value): value is string =>
+  Boolean(value)
+);
+
 const listActionOptionsSchema = z.object({
   outputFile: z
     .preprocess(
@@ -48,6 +82,19 @@ const listActionOptionsSchema = z.object({
       z.number().int().min(1, "Invalid --maxItems. Provide a positive integer.")
     )
     .default(1),
+  sortBy: z
+    .preprocess((value) => {
+      if (value === undefined) {
+        return "relevance";
+      }
+
+      if (typeof value === "string") {
+        return value.trim().toLowerCase();
+      }
+
+      return value;
+    }, listSortSchema)
+    .default("relevance"),
   skipPages: z
     .preprocess(
       (value) => {
@@ -115,17 +162,35 @@ function applySkipPages(pathname: string, skipPages: number): string {
   return `${pathname.replace(/\/?$/, "/")}${targetPage}`;
 }
 
-function normalizeUrl(inputUrl: string, skipPages = 0): string {
-  const trimmed = inputUrl.trim();
-
-  if (/^https?:\/\//i.test(trimmed)) {
-    const parsed = new URL(trimmed);
-    parsed.pathname = applySkipPages(parsed.pathname, skipPages);
-    return parsed.toString();
+function applySortQuery(url: URL, sortBy: z.infer<typeof listSortSchema>): void {
+  for (const queryValue of allSortQueryValues) {
+    url.searchParams.delete(queryValue);
   }
 
-  const normalizedPath = applySkipPages(trimmed.replace(/^\/+/, ""), skipPages);
-  return `https://www.idealista.com/${normalizedPath}`;
+  const targetQueryValue = sortByToQueryValue[sortBy];
+  if (!targetQueryValue) {
+    return;
+  }
+
+  const currentValue = url.searchParams.get(targetQueryValue);
+  if (currentValue === null) {
+    url.searchParams.set(targetQueryValue, "");
+  }
+}
+
+function normalizeUrl(
+  inputUrl: string,
+  skipPages = 0,
+  sortBy: z.infer<typeof listSortSchema> = "relevance"
+): string {
+  const trimmed = inputUrl.trim();
+  const url = /^https?:\/\//i.test(trimmed)
+    ? new URL(trimmed)
+    : new URL(trimmed.replace(/^\/+/, ""), "https://www.idealista.com/");
+
+  url.pathname = applySkipPages(url.pathname, skipPages);
+  applySortQuery(url, sortBy);
+  return url.toString();
 }
 
 export async function runListAction(
@@ -133,10 +198,13 @@ export async function runListAction(
   options?: RunListActionOptions
 ): Promise<number> {
   const startTime = Date.now();
+
+  // Apply defaults
   const pretty = options?.pretty ?? false;
   const maxPages = Math.max(1, options?.maxPages ?? 1);
+  const sortBy = options?.sortBy ?? "relevance";
   const skipPages = Math.max(0, options?.skipPages ?? 0);
-  const targetUrl = normalizeUrl(inputUrl, skipPages);
+  const targetUrl = normalizeUrl(inputUrl, skipPages, sortBy);
   const headless = options?.headless ?? true;
   const outputFile = options?.outputFile;
 

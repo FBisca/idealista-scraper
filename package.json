@@ -7,6 +7,8 @@
     "lint": "pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
+    "cli": "pnpm --filter @workspace/scraper cli",
+    "cli:help": "pnpm --filter @workspace/scraper cli help",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "native:rebuild": "pnpm --filter @workspace/scraper rebuild better-sqlite3 && pnpm --filter @workspace/scraper exec node ./scripts/ensure-ulixee-native.mjs",
