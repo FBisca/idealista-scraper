@@ -1,9 +1,7 @@
 import * as cheerio from 'cheerio';
 import {
-  ContentParserPlugin,
   InteractiveContentParserPlugin,
   InteractiveParseContext,
-  type ParseContext,
   type PluginEvaluation,
   type WebContent,
 } from '../web-engine/types.js';

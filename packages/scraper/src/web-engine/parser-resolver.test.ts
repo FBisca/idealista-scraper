@@ -57,22 +57,6 @@ class AsyncTitlePlugin extends ContentParserPlugin<string, string> {
   }
 }
 
-class InteractionRequiredParser
-  extends ContentParserPlugin<string, string>
-  implements InteractiveWebContentParser<string, string>
-{
-  readonly name = 'interaction-required';
-  readonly interactionMode = 'required' as const;
-
-  applies(): boolean {
-    return true;
-  }
-
-  async extract(): Promise<string> {
-    return 'interaction-required-plugin-output';
-  }
-}
-
 class InteractionRequiredFallbackParser
   extends WebContentParser<string, string>
   implements InteractiveWebContentParser<string, string>

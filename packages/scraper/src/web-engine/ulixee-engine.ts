@@ -12,7 +12,6 @@ import {
   FetchResponse,
   InteractionAdapter,
   InteractiveWebContentParser,
-  ParseContext,
   InteractiveParseContext,
   WebContentParser,
   WebEngine,
@@ -510,7 +509,7 @@ export class UlixeeWebEngine extends WebEngine {
           return false;
         }
       },
-      evaluate: <ResultType>(_script: string): Promise<ResultType> => {
+      evaluate: <ResultType>(): Promise<ResultType> => {
         throw new Error(
           'Evaluate is not supported in Ulixee interaction adapter',
         );
