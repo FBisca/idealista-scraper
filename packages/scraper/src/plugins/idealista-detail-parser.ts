@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import {
+  InteractionAdapter,
   InteractiveContentParserPlugin,
   InteractiveParseContext,
   type PluginEvaluation,
@@ -50,6 +51,7 @@ export interface IdealistaDetailAdvertiser {
   type?: string;
   profileUrl?: string;
   location?: string;
+  phoneNumber?: string;
 }
 
 export interface IdealistaDetailParseResult {
@@ -94,6 +96,10 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
     content: WebContent<string>,
     context: InteractiveParseContext,
   ): Promise<IdealistaDetailParseResult> {
+    if (await context.interaction.isVisible('#didomi-notice-agree-button')) {
+      await context.interaction.click('#didomi-notice-agree-button');
+    }
+
     const html = await this.resolveHtml(content.data, context);
     const $ = cheerio.load(html);
 
@@ -104,7 +110,10 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
     const subtitle = this.optionalText(
       $('.main-info__title-minor').first().text(),
     );
-    const pictureUrls = this.extractPictureUrls($, content.url);
+    const pictureUrls = await this.extractPictureUrls(
+      context.interaction,
+      content.url,
+    );
     const pricing = this.extractPricing($);
     const basicFeatures = this.extractBasicFeatures($);
     const buildingFeatures = this.extractBuildingFeatures($);
@@ -113,7 +122,11 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
     const description = this.extractDescription($);
     const tags = this.extractTags($);
     const housingSituation = this.extractHousingSituation($);
-    const advertiser = this.extractAdvertiser($, content.url);
+    const advertiser = await this.extractAdvertiser(
+      $,
+      content.url,
+      context.interaction,
+    );
     const referenceNumber =
       this.normalizeText($('.txt-ref').first().text()) || id;
     const photosCount = this.extractPhotosCount($);
@@ -403,10 +416,11 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
     return items.length ? items : undefined;
   }
 
-  private extractAdvertiser(
+  private async extractAdvertiser(
     $: cheerio.CheerioAPI,
     sourceUrl: string,
-  ): IdealistaDetailAdvertiser {
+    interaction: InteractionAdapter,
+  ): Promise<IdealistaDetailAdvertiser> {
     const nameEl = $(
       '.advertiser-name-container .about-advertiser-name',
     ).first();
@@ -434,12 +448,53 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
     const advertiserLocation =
       location && location !== name ? location : undefined;
 
+    const initialPhoneNumber = this.extractAdvertiserPhoneNumber($);
+    let revealedPhoneNumber: string | undefined;
+
+    try {
+      await interaction.click('#contact-phones-container > a');
+      await interaction.waitForSelector(
+        'a.hidden-contact-phones_formatted-phone',
+        500,
+      );
+      const htmlAfterPhoneReveal = await interaction.getHtml();
+
+      if (this.optionalText(htmlAfterPhoneReveal)) {
+        revealedPhoneNumber = this.extractAdvertiserPhoneNumber(
+          cheerio.load(htmlAfterPhoneReveal),
+        );
+      }
+    } catch {
+      revealedPhoneNumber = undefined;
+    }
+
+    const phoneNumber = revealedPhoneNumber ?? initialPhoneNumber;
+
     return {
       ...(name ? { name } : {}),
       ...(type ? { type } : {}),
       ...(profileUrl ? { profileUrl } : {}),
       ...(advertiserLocation ? { location: advertiserLocation } : {}),
+      ...(phoneNumber ? { phoneNumber } : {}),
     };
+  }
+
+  private extractAdvertiserPhoneNumber(
+    $: cheerio.CheerioAPI,
+  ): string | undefined {
+    const phones = $('a.hidden-contact-phones_formatted-phone[href^="tel:"]');
+
+    for (let i = 0; i < phones.length; i++) {
+      const phoneRef = $(phones[i]);
+      const candidate = this.optionalText(
+        phoneRef.attr('href')?.replace(/^tel:/i, ''),
+      );
+      if (candidate) {
+        return candidate;
+      }
+    }
+
+    return undefined;
   }
 
   private extractPhotosCount($: cheerio.CheerioAPI): number {
@@ -470,10 +525,14 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
     return 0;
   }
 
-  private extractPictureUrls(
-    $: cheerio.CheerioAPI,
+  private async extractPictureUrls(
+    interaction: InteractionAdapter,
     sourceUrl: string,
-  ): string[] {
+  ): Promise<string[]> {
+    await interaction.click('a.more-photos');
+    const htmlAfterClick = await interaction.getHtml();
+    const $ = cheerio.load(htmlAfterClick);
+
     const collected = new Set<string>();
 
     const addUrl = (candidate?: string) => {

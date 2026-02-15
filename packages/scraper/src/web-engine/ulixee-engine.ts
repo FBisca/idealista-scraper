@@ -497,6 +497,15 @@ export class UlixeeWebEngine extends WebEngine {
         await hero.waitForElement(element);
         element.click();
       },
+      isVisible: async (selector: string): Promise<boolean> => {
+        const element = hero.document.querySelector(selector);
+        try {
+          await hero.waitForElement(element, { timeoutMs: 500 });
+          return true;
+        } catch {
+          return false;
+        }
+      },
       waitForSelector: async (
         selector: string,
         timeoutMs = 5000,

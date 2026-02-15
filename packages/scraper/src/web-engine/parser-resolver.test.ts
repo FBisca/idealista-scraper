@@ -87,6 +87,7 @@ class InteractionRequiredPlugin
 function createInteractionAdapter(): InteractionAdapter {
   return {
     click: async () => undefined,
+    isVisible: async () => false,
     waitForSelector: async () => true,
     evaluate: async <ResultType>() => undefined as ResultType,
     getHtml: async () => '<html></html>',

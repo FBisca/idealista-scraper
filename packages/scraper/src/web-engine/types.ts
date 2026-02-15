@@ -37,6 +37,7 @@ type WebContent<T> = {
 
 type InteractionAdapter = {
   click(selector: string): Promise<void>;
+  isVisible(selector: string): Promise<boolean>;
   waitForSelector(selector: string, timeoutMs?: number): Promise<boolean>;
   evaluate<ResultType>(script: string): Promise<ResultType>;
   getHtml(): Promise<string>;

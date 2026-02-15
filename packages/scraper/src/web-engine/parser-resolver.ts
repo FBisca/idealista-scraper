@@ -32,22 +32,45 @@ async function resolveParserWithPlugins<T>(
   context: ParseContext | InteractiveParseContext,
 ): Promise<ResolveParserResult<T>> {
   const isInteractionContext = 'interaction' in context;
-  const plugins =
-    options.plugins?.filter(
-      (plugin) =>
-        !isInteractionContext ||
-        (plugin instanceof InteractiveWebContentParser && isInteractionContext),
-    ) ?? [];
+  const plugins = options.plugins ?? [];
+
+  const requiresInteraction = (value: unknown): boolean => {
+    if (value instanceof InteractiveWebContentParser) {
+      return true;
+    }
+
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      'interactionMode' in value &&
+      value.interactionMode === 'required'
+    ) {
+      return true;
+    }
+
+    return false;
+  };
 
   for (const plugin of plugins) {
     const shouldApply = await plugin.applies({ content, context });
     if (!shouldApply) continue;
+
+    if (!isInteractionContext && requiresInteraction(plugin)) {
+      throw new ParserInteractionUnsupportedError(plugin.name, context.engine);
+    }
 
     const pluginContent = await plugin.extract(content, context);
     return {
       content: pluginContent,
       pluginName: plugin.name,
     };
+  }
+
+  if (!isInteractionContext && requiresInteraction(options.htmlParser)) {
+    throw new ParserInteractionUnsupportedError(
+      options.htmlParser.constructor.name,
+      context.engine,
+    );
   }
 
   return {

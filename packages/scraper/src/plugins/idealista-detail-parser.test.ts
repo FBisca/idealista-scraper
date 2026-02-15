@@ -10,15 +10,18 @@ const detailHtml = readFileSync(
 );
 
 const sourceUrl = 'https://www.idealista.com/inmueble/110641394/';
+const revealedPhoneHtml = `${detailHtml}<a role="button" class="icon-phone-outline hidden-contact-phones_formatted-phone _mobilePhone" href="tel:+34919387970"><span class="hidden-contact-phones_text">919 38 79 70</span><span tabindex="0" class="phone-type-info phone-type-info--hidden"></span></a>`;
+
 const parseContext: InteractiveParseContext = {
   engine: 'ulixee',
   requestUrl: sourceUrl,
   interaction: {
     click: async () => undefined,
-    waitForSelector: async () => true,
+    isVisible: async () => false,
+    waitForSelector: async () => false,
     evaluate: async <ResultType>() => undefined as ResultType,
     getHtml: async () => detailHtml,
-    getUrl: async () => 'https://example.com',
+    getUrl: async () => sourceUrl,
   },
 };
 
@@ -204,9 +207,23 @@ describe('IdealistaDetailParserPlugin', () => {
 
   it('extracts advertiser info', async () => {
     const plugin = new IdealistaDetailParserPlugin();
+    let phoneRevealed = false;
+    const context: InteractiveParseContext = {
+      ...parseContext,
+      interaction: {
+        ...parseContext.interaction,
+        click: async (selector) => {
+          if (selector === '#contact-phones-container') {
+            phoneRevealed = true;
+          }
+        },
+        getHtml: async () =>
+          phoneRevealed ? detailHtml + revealedPhoneHtml : detailHtml,
+      },
+    };
     const result = await plugin.extract(
       { url: sourceUrl, data: detailHtml },
-      parseContext,
+      context,
     );
 
     expect(result.advertiser.name).toBe('Paula');
@@ -215,6 +232,7 @@ describe('IdealistaDetailParserPlugin', () => {
       'https://www.idealista.com/pro/paola-bambini/',
     );
     expect(result.advertiser.location).toBe('Las Rozas de Madrid');
+    expect(result.advertiser.phoneNumber).toBe('+34919387970');
   });
 
   it('extracts photos count and map availability', async () => {
@@ -252,6 +270,7 @@ describe('IdealistaDetailParserPlugin', () => {
       requestUrl: sourceUrl,
       interaction: {
         click: async () => undefined,
+        isVisible: async () => false,
         waitForSelector: async () => true,
         evaluate: async <ResultType>() => undefined as ResultType,
         getHtml: async () => interactiveHtml,
