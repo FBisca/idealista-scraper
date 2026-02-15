@@ -1,21 +1,26 @@
 #!/usr/bin/env node
-import { z } from "zod";
-import { listArgsSchema, runListAction } from "./actions/list.js";
+import { z } from 'zod';
+import { detailArgsSchema, runDetailAction } from './actions/detail.js';
+import { listArgsSchema, runListAction } from './actions/list.js';
 
 type ParsedArgs = {
   command: string;
   options: Record<string, string>;
 };
 
-const cliInputSchema = z.discriminatedUnion("command", [
+const cliInputSchema = z.discriminatedUnion('command', [
   z.object({
-    command: z.literal("help"),
-    options: z.record(z.string(), z.string())
+    command: z.literal('help'),
+    options: z.record(z.string(), z.string()),
   }),
   z.object({
-    command: z.literal("list"),
-    options: z.record(z.string(), z.string())
-  })
+    command: z.literal('list'),
+    options: z.record(z.string(), z.string()),
+  }),
+  z.object({
+    command: z.literal('detail'),
+    options: z.record(z.string(), z.string()),
+  }),
 ]);
 
 function parseArgs(argv: string[]): ParsedArgs {
@@ -25,11 +30,11 @@ function parseArgs(argv: string[]): ParsedArgs {
 
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
-    if (!arg?.startsWith("--")) {
+    if (!arg?.startsWith('--')) {
       continue;
     }
 
-    const [key, maybeValue] = arg.slice(2).split("=", 2);
+    const [key, maybeValue] = arg.slice(2).split('=', 2);
     if (!key) {
       continue;
     }
@@ -40,21 +45,26 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
 
     const next = rest[index + 1];
-    if (next && !next.startsWith("--")) {
+    if (next && !next.startsWith('--')) {
       options[key] = next;
       index += 1;
       continue;
     }
 
-    options[key] = "true";
+    options[key] = 'true';
   }
 
   return { command, options };
 }
 
 function normalizeCommand(command?: string): string {
-  if (!command || command === "help" || command === "--help" || command === "-h") {
-    return "help";
+  if (
+    !command ||
+    command === 'help' ||
+    command === '--help' ||
+    command === '-h'
+  ) {
+    return 'help';
   }
 
   return command;
@@ -73,10 +83,15 @@ Usage:
   cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --headless=false
   cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --outputFile="./tmp/listings.json"
   cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --pretty
+  cli detail --id=110641394
+  cli detail --id=110641394 --pretty
+  cli detail --id=110641394 --headless=false
+  cli detail --id=110641394 --outputFile="./tmp/detail.json"
 
 Commands:
   help    Show this help message
   list    Scrape an Idealista listing page and print parsed JSON
+  detail  Scrape an Idealista property detail page by ID
 
 List options:
   --url   Required for list. Accepts full URL or idealista path.
@@ -88,6 +103,12 @@ List options:
   --skipPages Optional for list. Starts at pagina-(skipPages+1).htm (default: 0).
   --headless Optional for list. Use false to show browser (default: true).
   --pretty Optional for list. Pretty-print JSON output.
+
+Detail options:
+  --id       Required for detail. Numeric Idealista property ID.
+  --outputFile Optional for detail. Writes JSON output to the given file path.
+  --headless Optional for detail. Use false to show browser (default: true).
+  --pretty   Optional for detail. Pretty-print JSON output.
 `);
 }
 
@@ -101,15 +122,19 @@ async function main(): Promise<number> {
     return 1;
   }
 
-  if (parsedCliInput.data.command === "help") {
+  if (parsedCliInput.data.command === 'help') {
     printHelp();
     return 0;
   }
 
-  if (parsedCliInput.data.command === "list") {
-    const parsedListArgs = listArgsSchema.safeParse(parsedCliInput.data.options);
+  if (parsedCliInput.data.command === 'list') {
+    const parsedListArgs = listArgsSchema.safeParse(
+      parsedCliInput.data.options,
+    );
     if (!parsedListArgs.success) {
-      console.error(parsedListArgs.error.issues[0]?.message ?? "Invalid arguments");
+      console.error(
+        parsedListArgs.error.issues[0]?.message ?? 'Invalid arguments',
+      );
       printHelp();
       return 1;
     }
@@ -120,7 +145,26 @@ async function main(): Promise<number> {
       maxPages: parsedListArgs.data.maxPages,
       skipPages: parsedListArgs.data.skipPages,
       headless: parsedListArgs.data.headless,
-      outputFile: parsedListArgs.data.outputFile
+      outputFile: parsedListArgs.data.outputFile,
+    });
+  }
+
+  if (parsedCliInput.data.command === 'detail') {
+    const parsedDetailArgs = detailArgsSchema.safeParse(
+      parsedCliInput.data.options,
+    );
+    if (!parsedDetailArgs.success) {
+      console.error(
+        parsedDetailArgs.error.issues[0]?.message ?? 'Invalid arguments',
+      );
+      printHelp();
+      return 1;
+    }
+
+    return runDetailAction(parsedDetailArgs.data.id, {
+      pretty: parsedDetailArgs.data.pretty,
+      headless: parsedDetailArgs.data.headless,
+      outputFile: parsedDetailArgs.data.outputFile,
     });
   }
 
