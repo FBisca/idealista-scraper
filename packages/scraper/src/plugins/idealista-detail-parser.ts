@@ -22,6 +22,10 @@ export interface IdealistaDetailBasicFeatures {
   bathrooms?: number;
   condition?: string;
   yearBuilt?: number;
+  terrace?: boolean;
+  builtInWardrobes?: boolean;
+  orientation?: string;
+  heating?: string;
 }
 
 export interface IdealistaDetailBuildingFeatures {
@@ -34,6 +38,8 @@ export interface IdealistaDetailBuildingFeatures {
 export interface IdealistaDetailEnergyCertificate {
   consumption?: string;
   emissions?: string;
+  consumptionValueKwhM2Year?: number;
+  emissionsValueKgCo2M2Year?: number;
 }
 
 export interface IdealistaDetailLocation {
@@ -64,6 +70,7 @@ export interface IdealistaDetailParseResult {
   basicFeatures: IdealistaDetailBasicFeatures;
   buildingFeatures?: IdealistaDetailBuildingFeatures;
   energyCertificate?: IdealistaDetailEnergyCertificate;
+  equipmentFeatures?: string[];
   location: IdealistaDetailLocation;
   description?: string;
   tags: string[];
@@ -118,6 +125,7 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
     const basicFeatures = this.extractBasicFeatures($);
     const buildingFeatures = this.extractBuildingFeatures($);
     const energyCertificate = this.extractEnergyCertificate($);
+    const equipmentFeatures = this.extractEquipmentFeatures($);
     const location = this.extractLocation($, html);
     const description = this.extractDescription($);
     const tags = this.extractTags($);
@@ -148,6 +156,7 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
       basicFeatures,
       ...(buildingFeatures ? { buildingFeatures } : {}),
       ...(energyCertificate ? { energyCertificate } : {}),
+      ...(equipmentFeatures.length ? { equipmentFeatures } : {}),
       location,
       ...(description ? { description } : {}),
       tags,
@@ -241,7 +250,22 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
         /segunda mano|obra nueva|a reformar|en ruinas|buen estado|para reformar/i,
       ),
       yearBuilt: this.parseNumericMatch(items, /construido en\s+(\d{4})/i),
+      terrace: items.some((item) => /terraza/i.test(item)) || undefined,
+      builtInWardrobes:
+        items.some((item) => /armarios empotrados/i.test(item)) || undefined,
+      orientation: this.extractBasicOrientation(items),
+      heating: this.findMatchingItem(items, /calefacci[oó]n/i),
     };
+  }
+
+  private extractBasicOrientation(items: string[]): string | undefined {
+    const orientationItem = this.findMatchingItem(items, /orientaci[oó]n\s+/i);
+    if (!orientationItem) {
+      return undefined;
+    }
+
+    const match = orientationItem.match(/orientaci[oó]n\s+(.+)/i);
+    return this.optionalText(match?.[1]);
   }
 
   private extractBuildingFeatures(
@@ -294,6 +318,8 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
 
     let consumption: string | undefined;
     let emissions: string | undefined;
+    let consumptionValueKwhM2Year: number | undefined;
+    let emissionsValueKgCo2M2Year: number | undefined;
 
     listItems.each((_, element) => {
       const item = $(element);
@@ -307,6 +333,8 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
       const className = ratingSpan.attr('class') ?? '';
       const ratingMatch = className.match(/icon-energy-c-([a-g])/i);
       const rating = ratingMatch?.[1]?.toUpperCase();
+      const ratingText = this.normalizeText(ratingSpan.text());
+      const ratingValue = this.parseFirstNumber(ratingText);
 
       if (!rating) {
         return;
@@ -314,19 +342,52 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
 
       if (/consumo/i.test(label)) {
         consumption = rating;
+        consumptionValueKwhM2Year = ratingValue;
       } else if (/emisi[oó]n/i.test(label)) {
         emissions = rating;
+        emissionsValueKgCo2M2Year = ratingValue;
       }
     });
 
-    if (!consumption && !emissions) {
+    const consumptionValueFromTicket = this.parseFirstNumber(
+      $('.energy-certificate-img-ticket-left')
+        .first()
+        .attr('data-value-left-cee'),
+    );
+    const emissionsValueFromTicket = this.parseFirstNumber(
+      $('.energy-certificate-img-ticket-right')
+        .first()
+        .attr('data-value-right-cee'),
+    );
+
+    const finalConsumptionValue =
+      consumptionValueKwhM2Year ?? consumptionValueFromTicket;
+    const finalEmissionsValue =
+      emissionsValueKgCo2M2Year ?? emissionsValueFromTicket;
+
+    if (
+      !consumption &&
+      !emissions &&
+      !finalConsumptionValue &&
+      !finalEmissionsValue
+    ) {
       return undefined;
     }
 
     return {
       ...(consumption ? { consumption } : {}),
       ...(emissions ? { emissions } : {}),
+      ...(finalConsumptionValue
+        ? { consumptionValueKwhM2Year: finalConsumptionValue }
+        : {}),
+      ...(finalEmissionsValue
+        ? { emissionsValueKgCo2M2Year: finalEmissionsValue }
+        : {}),
     };
+  }
+
+  private extractEquipmentFeatures($: cheerio.CheerioAPI): string[] {
+    return this.extractFeatureSection($, 'Equipamiento');
   }
 
   private extractLocation(
@@ -671,6 +732,26 @@ export class IdealistaDetailParserPlugin extends InteractiveContentParserPlugin<
     }
 
     return value;
+  }
+
+  private parseFirstNumber(value: string | undefined): number | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    const match = value.match(/[+-]?\d+(?:[.,]\d+)?/);
+    if (!match?.[0]) {
+      return undefined;
+    }
+
+    const normalized = match[0].replace(',', '.');
+    const parsed = Number(normalized);
+
+    if (!Number.isFinite(parsed)) {
+      return undefined;
+    }
+
+    return parsed;
   }
 
   private normalizeText(value: string): string {

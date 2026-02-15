@@ -148,6 +148,75 @@ describe('IdealistaDetailParserPlugin', () => {
     });
   });
 
+  it('extracts extended details from details-property_features sections', async () => {
+    const plugin = new IdealistaDetailParserPlugin();
+    const extendedHtml = `
+      <div class="main-info__title-main">Piso en venta</div>
+      <div class="details-property">
+        <div class="details-property-feature-one">
+          <h2 class="details-property-h2">Características básicas</h2>
+          <div class="details-property_features">
+            <ul>
+              <li>97 m² construidos</li>
+              <li>3 habitaciones</li>
+              <li>2 baños</li>
+              <li>Terraza</li>
+              <li>Segunda mano/buen estado</li>
+              <li>Armarios empotrados</li>
+              <li>Orientación oeste</li>
+              <li>Construido en 1959</li>
+              <li>Calefacción individual</li>
+            </ul>
+          </div>
+        </div>
+        <div class="details-property-feature-two">
+          <h2 class="details-property-h2">Equipamiento</h2>
+          <div class="details-property_features">
+            <ul>
+              <li>Aire acondicionado</li>
+            </ul>
+          </div>
+          <h2 class="details-property-h2">Certificado energético</h2>
+          <div class="details-property_features">
+            <ul>
+              <li>
+                <span>Consumo: </span>
+                <span class="icon-energy-c-e">201 kWh/m² año</span>
+              </li>
+              <li>
+                <span>Emisiones: </span>
+                <span class="icon-energy-c-e">42 kg CO2/m² año</span>
+              </li>
+            </ul>
+            <div class="energy-certificate-dropdown">
+              <figure class="energy-certificate-img-container">
+                <span class="energy-certificate-img-ticket-left left-e" data-value-left-cee="201.0"></span>
+                <span class="energy-certificate-img-ticket-right right-e" data-value-right-cee="42.0"></span>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const result = await plugin.extract(
+      { url: sourceUrl, data: extendedHtml },
+      parseContext,
+    );
+
+    expect(result.basicFeatures.terrace).toBe(true);
+    expect(result.basicFeatures.builtInWardrobes).toBe(true);
+    expect(result.basicFeatures.orientation).toBe('oeste');
+    expect(result.basicFeatures.heating).toBe('Calefacción individual');
+    expect(result.equipmentFeatures).toEqual(['Aire acondicionado']);
+    expect(result.energyCertificate).toMatchObject({
+      consumption: 'E',
+      emissions: 'E',
+      consumptionValueKwhM2Year: 201,
+      emissionsValueKgCo2M2Year: 42,
+    });
+  });
+
   it('extracts location with coordinates', async () => {
     const plugin = new IdealistaDetailParserPlugin();
     const result = await plugin.extract(
@@ -212,6 +281,7 @@ describe('IdealistaDetailParserPlugin', () => {
       ...parseContext,
       interaction: {
         ...parseContext.interaction,
+        isVisible: async (selector) => selector === '#contact-phones-container',
         click: async (selector) => {
           if (selector === '#contact-phones-container') {
             phoneRevealed = true;
