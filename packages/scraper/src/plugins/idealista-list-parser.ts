@@ -45,6 +45,7 @@ export interface IdealistaListing {
 	label: string
 	url: string
 	price: IdealistaPriceInfo
+	includedParking: boolean
 	details: IdealistaListingDetails
 	description?: string
 	tags: string[]
@@ -122,6 +123,7 @@ export class IdealistaListParserPlugin extends ContentParserPlugin<string, Ideal
 				article.find('.pricedown_price, .item-price-discount, .item-price--discount').first().text()
 			)
 			const price = this.buildPriceInfo(currentPrice, originalPrice)
+			const includedParking = article.find('.price-row .item-parking').length > 0
 			const agencyCandidates = this.collectAgencyCandidates(article, content.url, $)
 			const agency = this.resolveAgencyFromCandidates(agencyCandidates)
 
@@ -130,6 +132,7 @@ export class IdealistaListParserPlugin extends ContentParserPlugin<string, Ideal
 				label,
 				url: this.toAbsoluteUrl(href, content.url),
 				price,
+				includedParking,
 				details,
 				...(description ? { description } : {}),
 				tags,
