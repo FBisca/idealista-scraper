@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+.turbo
+*.tsbuildinfo
+
+// Ignore VS Code Local History plugin files
+.history
