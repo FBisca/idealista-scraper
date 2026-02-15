@@ -12,6 +12,17 @@ type Instance = {
   createProperties: IHeroCreateOptions
 }
 
+const LOCAL_ULIXEE_CLOUD_NOT_STARTED_MESSAGE = 'A local Ulixee Cloud is not started'
+
+class LocalUlixeeCloudNotStartedError extends Error {
+  public readonly remediationCommand = 'pnpm browser:start'
+
+  constructor(message?: string) {
+    super(message ?? `${LOCAL_ULIXEE_CLOUD_NOT_STARTED_MESSAGE}. Run \`pnpm browser:start\` from the project root.`)
+    this.name = 'LocalUlixeeCloudNotStartedError'
+  }
+}
+
 export class UlixeeWebEngine extends WebEngine {
   private readonly heroOptions: IHeroCreateOptions
   private readonly profileManager: UlixeeProfileManager
@@ -169,7 +180,28 @@ export class UlixeeWebEngine extends WebEngine {
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const normalizedError = this.normalizeScrapeError(error)
+      const errorMessage = normalizedError.message
+
+      if (normalizedError instanceof LocalUlixeeCloudNotStartedError) {
+        log.error(
+          `[Ulixee Hero] Local Ulixee Cloud is not running. Start it before scraping with: ${normalizedError.remediationCommand}`,
+          error
+        )
+
+        return {
+          success: false,
+          error: errorMessage,
+          errorCode: 'unexpected',
+          metadata: {
+            duration: Date.now() - startTime,
+            method: 'ulixee-hero',
+            showBrowser,
+            failureReason: errorMessage,
+            remediationCommand: normalizedError.remediationCommand
+          }
+        }
+      }
 
       log.error(`[Ulixee Hero] Scraping failed:`, error)
       if (retry < 2) {
@@ -369,7 +401,7 @@ export class UlixeeWebEngine extends WebEngine {
 
     const createProperties = {
       ...this.heroOptions,
-      showChrome: showBrowser ?? false,
+      showChrome: true,
       userProfile: userProfile
     } satisfies IHeroCreateOptions
 
@@ -377,5 +409,23 @@ export class UlixeeWebEngine extends WebEngine {
       hero: new Hero(createProperties),
       createProperties
     }
+  }
+
+  private normalizeScrapeError(error: unknown): Error {
+    if (error instanceof LocalUlixeeCloudNotStartedError) {
+      return error
+    }
+
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
+    if (errorMessage.includes(LOCAL_ULIXEE_CLOUD_NOT_STARTED_MESSAGE)) {
+      return new LocalUlixeeCloudNotStartedError()
+    }
+
+    if (error instanceof Error) {
+      return error
+    }
+
+    return new Error(errorMessage)
   }
 }
