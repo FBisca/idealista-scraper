@@ -9,3 +9,6 @@ coverage
 
 // Ignore macOS system files
 .DS_Store
+
+// mise
+.tool-versions
