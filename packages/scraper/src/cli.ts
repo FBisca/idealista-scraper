@@ -68,6 +68,7 @@ Usage:
   cli list --url="venta-viviendas/madrid-madrid/con-precio-hasta_360000,precio-desde_175000,metros-cuadrados-mas-de_40,solo-pisos,ascensor,plantas-intermedias,buen-estado/"
   cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/"
   cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --maxPages=3
+  cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --skipPages=2
   cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --headless=false
   cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --outputFile="./tmp/listings.json"
   cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --pretty
@@ -80,6 +81,7 @@ List options:
   --url   Required for list. Accepts full URL or idealista path.
   --outputFile Optional for list. Writes JSON output to the given file path.
   --maxPages Optional for list. Maximum number of pages to fetch (default: 1).
+  --skipPages Optional for list. Starts at pagina-(skipPages+1).htm (default: 0).
   --headless Optional for list. Use false to show browser (default: true).
   --pretty Optional for list. Pretty-print JSON output.
 `)
@@ -111,6 +113,7 @@ async function main(): Promise<number> {
     return runListAction(parsedListArgs.data.url, {
       pretty: parsedListArgs.data.pretty,
       maxPages: parsedListArgs.data.maxPages,
+      skipPages: parsedListArgs.data.skipPages,
       headless: parsedListArgs.data.headless,
       outputFile: parsedListArgs.data.outputFile
     })

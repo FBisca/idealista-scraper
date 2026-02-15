@@ -387,7 +387,7 @@ export class UlixeeWebEngine extends WebEngine {
       try {
         await this.currentInstance.hero.close()
         this.currentInstance = undefined
-        log.info('[Ulixee Hero] Instance closed')
+        log.debug('[Ulixee Hero] Instance closed')
       } catch (error) {
         log.error('[Ulixee Hero] Error closing instance:', error)
       }

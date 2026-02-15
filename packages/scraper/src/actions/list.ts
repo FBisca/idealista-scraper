@@ -1,133 +1,163 @@
-import { mkdir, writeFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
-import { z } from 'zod'
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
+import { log } from "@workspace/logger";
+import { z } from "zod";
 import {
   type IdealistaAveragePricePerSquareMeter,
   IdealistaListParserPlugin,
   type IdealistaListParseResult
-} from '../plugins/idealista-list-parser.js'
-import { UlixeeWebEngine } from '../web-engine/ulixee-engine.js'
-import type { FetchResponse } from '../web-engine/types.js'
-import { formatJson } from '../utils/json.js'
+} from "../plugins/idealista-list-parser.js";
+import { UlixeeWebEngine } from "../web-engine/ulixee-engine.js";
+import type { FetchResponse } from "../web-engine/types.js";
+import { formatJson } from "../utils/json.js";
 
-const booleanFromCliSchema = z
-  .enum(['true', 'false'])
-  .transform(value => value === 'true')
+const booleanFromCliSchema = z.enum(["true", "false"]).transform((value) => value === "true");
 
 const listActionOptionsSchema = z.object({
   outputFile: z
-    .preprocess(value => {
-      if (value === undefined) {
-        return undefined
-      }
+    .preprocess(
+      (value) => {
+        if (value === undefined) {
+          return undefined;
+        }
 
-      if (typeof value === 'string') {
-        const trimmed = value.trim()
-        return trimmed.length ? trimmed : undefined
-      }
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          return trimmed.length ? trimmed : undefined;
+        }
 
-      return value
-    }, z.string().min(1, 'Invalid --outputFile path'))
+        return value;
+      },
+      z.string().min(1, "Invalid --outputFile path")
+    )
     .optional(),
   maxPages: z
     .preprocess(
-      value => {
+      (value) => {
         if (value === undefined) {
-          return 1
+          return 1;
         }
 
-        if (typeof value === 'string') {
-          const parsedValue = Number(value)
-          return Number.isFinite(parsedValue) ? parsedValue : value
+        if (typeof value === "string") {
+          const parsedValue = Number(value);
+          return Number.isFinite(parsedValue) ? parsedValue : value;
         }
 
-        return value
+        return value;
       },
-      z.number().int().min(1, 'Invalid --maxItems. Provide a positive integer.')
+      z.number().int().min(1, "Invalid --maxItems. Provide a positive integer.")
     )
     .default(1),
-  headless: z
+  skipPages: z
     .preprocess(
-      value => {
+      (value) => {
         if (value === undefined) {
-          return 'false'
+          return 0;
         }
 
-        if (typeof value === 'string') {
-          return value.toLowerCase()
+        if (typeof value === "string") {
+          const parsedValue = Number(value);
+          return Number.isFinite(parsedValue) ? parsedValue : value;
         }
 
-        return value
+        return value;
       },
-      booleanFromCliSchema
+      z.number().int().min(0, "Invalid --skipPages. Provide an integer >= 0.")
     )
+    .default(0),
+  headless: z
+    .preprocess((value) => {
+      if (value === undefined) {
+        return "false";
+      }
+
+      if (typeof value === "string") {
+        return value.toLowerCase();
+      }
+
+      return value;
+    }, booleanFromCliSchema)
     .default(false),
   pretty: z
-    .preprocess(
-      value => {
-        if (value === undefined) {
-          return 'false'
-        }
+    .preprocess((value) => {
+      if (value === undefined) {
+        return "false";
+      }
 
-        if (typeof value === 'string') {
-          return value.toLowerCase()
-        }
+      if (typeof value === "string") {
+        return value.toLowerCase();
+      }
 
-        return value
-      },
-      booleanFromCliSchema
-    )
+      return value;
+    }, booleanFromCliSchema)
     .default(false)
-})
+});
 
 const listArgsSchema = z.object({
-  url: z.string().trim().min(1, 'Missing required option: --url'),
+  url: z.string().trim().min(1, "Missing required option: --url"),
   ...listActionOptionsSchema.shape
-})
+});
 
-type ListArgs = z.infer<typeof listArgsSchema>
-type RunListActionOptions = Omit<ListArgs, 'url'>
+type ListArgs = z.infer<typeof listArgsSchema>;
+type RunListActionOptions = Omit<ListArgs, "url">;
 
-function normalizeUrl(inputUrl: string): string {
-  const trimmed = inputUrl.trim()
-
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed
+function applySkipPages(pathname: string, skipPages: number): string {
+  if (skipPages <= 0) {
+    return pathname;
   }
 
-  const normalizedPath = trimmed.replace(/^\/+/, '')
-  return `https://www.idealista.com/${normalizedPath}`
+  const targetPage = `pagina-${skipPages + 1}.htm`;
+
+  if (/\/pagina-\d+\.htm$/i.test(pathname)) {
+    return pathname.replace(/\/pagina-\d+\.htm$/i, `/${targetPage}`);
+  }
+
+  return `${pathname.replace(/\/?$/, "/")}${targetPage}`;
+}
+
+function normalizeUrl(inputUrl: string, skipPages = 0): string {
+  const trimmed = inputUrl.trim();
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    const parsed = new URL(trimmed);
+    parsed.pathname = applySkipPages(parsed.pathname, skipPages);
+    return parsed.toString();
+  }
+
+  const normalizedPath = applySkipPages(trimmed.replace(/^\/+/, ""), skipPages);
+  return `https://www.idealista.com/${normalizedPath}`;
 }
 
 export async function runListAction(
   inputUrl: string,
   options?: RunListActionOptions
 ): Promise<number> {
-  const targetUrl = normalizeUrl(inputUrl)
-  const pretty = options?.pretty ?? false
-  const maxPages = Math.max(1, options?.maxPages ?? 1)
-  const headless = options?.headless ?? true
-  const outputFile = options?.outputFile
-  
-  const engine = new UlixeeWebEngine()
+  const startTime = Date.now();
+  const pretty = options?.pretty ?? false;
+  const maxPages = Math.max(1, options?.maxPages ?? 1);
+  const skipPages = Math.max(0, options?.skipPages ?? 0);
+  const targetUrl = normalizeUrl(inputUrl, skipPages);
+  const headless = options?.headless ?? true;
+  const outputFile = options?.outputFile;
 
-  const collectedListings: IdealistaListParseResult['listings'] = []
-  const visitedIds = new Set<string>()
-  
-  let currentUrl: string | undefined = targetUrl
-  let pagesFetched = 0
-  let totalItems: number | undefined
-  let averagePricePerSquareMeter: IdealistaAveragePricePerSquareMeter | undefined
+  const engine = new UlixeeWebEngine();
 
+  const collectedListings: IdealistaListParseResult["listings"] = [];
+  const visitedIds = new Set<string>();
+
+  let currentUrl: string | undefined = targetUrl;
+  let pagesFetched = 0;
+  let totalItems: number | undefined;
+  let averagePricePerSquareMeter: IdealistaAveragePricePerSquareMeter | undefined;
+
+  log.info("Starting list action", JSON.stringify({ targetUrl, options }));
   try {
     while (currentUrl && pagesFetched < maxPages) {
-      const response: FetchResponse<IdealistaListParseResult> = await engine.fetchContent<IdealistaListParseResult>(
-        currentUrl,
-        {
+      const response: FetchResponse<IdealistaListParseResult> =
+        await engine.fetchContent<IdealistaListParseResult>(currentUrl, {
           showBrowser: !headless,
           htmlParser: new IdealistaListParserPlugin()
-        }
-      )
+        });
 
       if (!response.success) {
         console.error(
@@ -145,36 +175,36 @@ export async function runListAction(
             },
             pretty
           )
-        )
-        return 1
+        );
+        return 1;
       }
 
-      pagesFetched += 1
+      pagesFetched += 1;
 
       if (!totalItems && response.content.totalItems) {
-        totalItems = response.content.totalItems
+        totalItems = response.content.totalItems;
       }
 
       if (!averagePricePerSquareMeter && response.content.averagePricePerSquareMeter) {
-        averagePricePerSquareMeter = response.content.averagePricePerSquareMeter
+        averagePricePerSquareMeter = response.content.averagePricePerSquareMeter;
       }
 
       for (const listing of response.content.listings) {
         if (visitedIds.has(listing.id)) {
-          continue
+          continue;
         }
 
-        visitedIds.add(listing.id)
-        collectedListings.push(listing)
+        visitedIds.add(listing.id);
+        collectedListings.push(listing);
       }
 
-      const nextPageUrl: string | undefined = response.content.pagination.nextPageUrl
+      const nextPageUrl: string | undefined = response.content.pagination.nextPageUrl;
       if (!nextPageUrl || pagesFetched >= maxPages) {
-        break
+        break;
       }
 
-      await waitHumanDelay()
-      currentUrl = nextPageUrl
+      await waitHumanDelay();
+      currentUrl = nextPageUrl;
     }
 
     const output = formatJson(
@@ -189,27 +219,30 @@ export async function runListAction(
         ...(averagePricePerSquareMeter ? { averagePricePerSquareMeter } : {})
       },
       pretty
-    )
+    );
 
     if (outputFile) {
-      await mkdir(dirname(outputFile), { recursive: true })
-      await writeFile(outputFile, output, 'utf-8')
+      await mkdir(dirname(outputFile), { recursive: true });
+      await writeFile(outputFile, output, "utf-8");
     } else {
-      console.log(output)
+      console.log(output);
     }
-    return 0
+    log.info(
+      `Execution finished in ${Date.now() - startTime}ms with ${collectedListings.length} unique listings collected.`
+    );
+    return 0;
   } finally {
-    await engine.cleanup()
+    await engine.cleanup();
   }
 }
 
 async function waitHumanDelay(): Promise<void> {
-  const minDelayMs = 350
-  const maxDelayMs = 1000
-  const delayMs = Math.floor(Math.random() * (maxDelayMs - minDelayMs + 1)) + minDelayMs
+  const minDelayMs = 350;
+  const maxDelayMs = 1000;
+  const delayMs = Math.floor(Math.random() * (maxDelayMs - minDelayMs + 1)) + minDelayMs;
 
-  await new Promise(resolve => setTimeout(resolve, delayMs))
+  await new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 
-export { listArgsSchema }
-export type { ListArgs, RunListActionOptions }
+export { listArgsSchema };
+export type { ListArgs, RunListActionOptions };
