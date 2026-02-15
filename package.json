@@ -4,12 +4,16 @@
   "version": "0.0.0",
   "packageManager": "pnpm@10.5.2",
   "scripts": {
-    "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "native:rebuild": "pnpm --filter @workspace/scraper rebuild better-sqlite3 && pnpm --filter @workspace/scraper exec node ./scripts/ensure-ulixee-native.mjs",
+    "browser:start": "pnpm --filter @workspace/scraper exec cloud start"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.1.1",
     "prettier": "^3.5.3",

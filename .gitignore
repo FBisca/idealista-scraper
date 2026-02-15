@@ -6,3 +6,6 @@ coverage
 
 // Ignore VS Code Local History plugin files
 .history
+
+// Ignore macOS system files
+.DS_Store

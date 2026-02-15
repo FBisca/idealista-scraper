@@ -1,2 +1,8 @@
 packages:
-  - "packages/*"
+  - packages/*
+
+onlyBuiltDependencies:
+  - '@ulixee/chrome-139-0'
+  - '@ulixee/chrome-143-0'
+  - '@ulixee/unblocked-agent-mitm-socket'
+  - better-sqlite3
