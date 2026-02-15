@@ -24,6 +24,7 @@ const listingHtml = `
           <p class="item-description">Vivienda luminosa en zona tranquila.</p>
           <div class="listing-tags-container">
             <span class="listing-tags ">Alquilada</span>
+            <span class="listing-tags ">Apartamento</span>
           </div>
         </div>
         <footer class="item-detail-footer">
@@ -144,7 +145,7 @@ describe('IdealistaListParserPlugin', () => {
         floor: 'Planta 2ª exterior con ascensor'
       },
       description: 'Vivienda luminosa en zona tranquila.',
-      tags: ['Alquilada'],
+      tags: ['Alquilada', 'Apartamento  '],
       agency: {
         title: 'Altor Asesores',
         url: 'https://www.idealista.com/pro/altorasesores/',
