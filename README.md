@@ -52,6 +52,50 @@ pnpm typecheck
 pnpm test
 ```
 
+## AI Enablement
+
+This repository is prepared for AI-assisted development with common instruction patterns:
+
+- Copilot repo instructions: `.github/copilot-instructions.md`
+- Cross-agent playbook (Cursor/Claude/Copilot): `AGENTS.md`
+- Claude-specific entrypoint: `CLAUDE.md`
+- Cursor-specific entrypoint: `.cursorrules`
+- AI contributor context: `docs/ai/context.md`
+- Reusable prompt library: `docs/ai/prompt-templates.md`
+
+Recommended flow when using an AI coding agent:
+
+1. Read `AGENTS.md` and `docs/ai/context.md`.
+2. Start from a template in `docs/ai/prompt-templates.md`.
+3. Keep edits minimal and package-scoped.
+4. Validate with:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+```
+
+## Parser plugins (conditional HTML parsing)
+
+`@workspace/scraper` now supports parser plugins with conditions:
+
+- `plugins` are evaluated in order.
+- First plugin whose `applies(...)` returns `true` is used.
+- If none match, `htmlParser` is used as fallback.
+
+Plugin API is exported from the package root:
+
+- `ContentParserPlugin`
+- `WebContentParser`
+- `resolveParserWithPlugins`
+- `ParseContext`
+
+Engines now pass rich context before parsing:
+
+- Ulixee: request/final URL, title, HTML, domain, CAPTCHA signal, session/runtime metadata.
+- Axios: request headers, response status/headers, request/final URL.
+
 ## Troubleshooting Ulixee MitmSocket binary
 
 If you ever see a missing file error for:
