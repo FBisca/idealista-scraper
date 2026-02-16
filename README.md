@@ -52,6 +52,10 @@ pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" -
 pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --headless=false
 pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --outputFile="./tmp/listings.json"
 pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --pretty
+pnpm cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/"
+pnpm cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --maxItems=30 --workers=4
+pnpm cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --maxItems=30 --maxErrors=5
+pnpm cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --outputFile="./tmp/crawl-details.json" --pretty
 ```
 
 ### List command options
@@ -72,6 +76,18 @@ pnpm cli list --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" -
   - `highest-floor`
   - `lowest-floor`
 - `--maxPages` Optional. Maximum pages to fetch (default: `1`).
+- `--skipPages` Optional. Starts at `pagina-(skipPages+1).htm` (default: `0`).
+- `--headless` Optional. Use `false` to show browser (default: `true`).
+- `--pretty` Optional. Pretty-print JSON output.
+
+### Crawl command options
+
+- `--url` Required. Full URL or Idealista path.
+- `--workers` Optional. Parallel workers used for detail requests (default: `4`).
+- `--maxErrors` Optional. Stop scheduling new detail requests after this many errors (default: `5`).
+- `--maxItems` Optional. Maximum number of listed flats to detail.
+- `--outputFile` Optional. Writes JSON output to file.
+- `--sortBy` Optional. Same values as list command.
 - `--skipPages` Optional. Starts at `pagina-(skipPages+1).htm` (default: `0`).
 - `--headless` Optional. Use `false` to show browser (default: `true`).
 - `--pretty` Optional. Pretty-print JSON output.

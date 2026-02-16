@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { z } from 'zod';
+import { crawlArgsSchema, runCrawlAction } from './actions/crawl.js';
 import { detailArgsSchema, runDetailAction } from './actions/detail.js';
 import { listArgsSchema, runListAction } from './actions/list.js';
 
@@ -19,6 +20,10 @@ const cliInputSchema = z.discriminatedUnion('command', [
   }),
   z.object({
     command: z.literal('detail'),
+    options: z.record(z.string(), z.string()),
+  }),
+  z.object({
+    command: z.literal('crawl'),
     options: z.record(z.string(), z.string()),
   }),
 ]);
@@ -87,11 +92,16 @@ Usage:
   cli detail --id=110641394 --pretty
   cli detail --id=110641394 --headless=false
   cli detail --id=110641394 --outputFile="./tmp/detail.json"
+  cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/"
+  cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --maxItems=30 --workers=4
+  cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --maxItems=30 --maxErrors=5
+  cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --outputFile="./tmp/crawl-details.json" --pretty
 
 Commands:
   help    Show this help message
   list    Scrape an Idealista listing page and print parsed JSON
   detail  Scrape an Idealista property detail page by ID
+  crawl   List flats then fetch detail pages in parallel workers
 
 List options:
   --url   Required for list. Accepts full URL or idealista path.
@@ -109,6 +119,17 @@ Detail options:
   --outputFile Optional for detail. Writes JSON output to the given file path.
   --headless Optional for detail. Use false to show browser (default: true).
   --pretty   Optional for detail. Pretty-print JSON output.
+
+Crawl options:
+  --url       Required for crawl. Accepts full URL or idealista path.
+  --workers   Optional for crawl. Parallel detail workers (default: 4).
+  --maxErrors Optional for crawl. Stop scheduling details after this many errors (default: 5).
+  --maxItems  Optional for crawl. Cap how many listed flats are detailed.
+  --outputFile Optional for crawl. Writes JSON output to the given file path.
+  --sortBy    Optional for crawl. Same accepted values as list.
+  --skipPages Optional for crawl. Starts at pagina-(skipPages+1).htm (default: 0).
+  --headless  Optional for crawl. Use false to show browser (default: true).
+  --pretty    Optional for crawl. Pretty-print JSON output.
 `);
 }
 
@@ -165,6 +186,30 @@ async function main(): Promise<number> {
       pretty: parsedDetailArgs.data.pretty,
       headless: parsedDetailArgs.data.headless,
       outputFile: parsedDetailArgs.data.outputFile,
+    });
+  }
+
+  if (parsedCliInput.data.command === 'crawl') {
+    const parsedCrawlArgs = crawlArgsSchema.safeParse(
+      parsedCliInput.data.options,
+    );
+    if (!parsedCrawlArgs.success) {
+      console.error(
+        parsedCrawlArgs.error.issues[0]?.message ?? 'Invalid arguments',
+      );
+      printHelp();
+      return 1;
+    }
+
+    return runCrawlAction(parsedCrawlArgs.data.url, {
+      pretty: parsedCrawlArgs.data.pretty,
+      sortBy: parsedCrawlArgs.data.sortBy,
+      skipPages: parsedCrawlArgs.data.skipPages,
+      headless: parsedCrawlArgs.data.headless,
+      outputFile: parsedCrawlArgs.data.outputFile,
+      workers: parsedCrawlArgs.data.workers,
+      maxErrors: parsedCrawlArgs.data.maxErrors,
+      maxItems: parsedCrawlArgs.data.maxItems,
     });
   }
 

@@ -282,10 +282,8 @@ describe('IdealistaDetailParserPlugin', () => {
       interaction: {
         ...parseContext.interaction,
         isVisible: async (selector) => selector === '#contact-phones-container',
-        click: async (selector) => {
-          if (selector === '#contact-phones-container') {
-            phoneRevealed = true;
-          }
+        click: async () => {
+          phoneRevealed = true;
         },
         getHtml: async () =>
           phoneRevealed ? detailHtml + revealedPhoneHtml : detailHtml,

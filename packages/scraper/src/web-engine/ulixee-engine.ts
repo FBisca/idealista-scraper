@@ -100,7 +100,7 @@ export class UlixeeWebEngine extends WebEngine {
       }
 
       // Create new Hero instance with stealth capabilities and domain-specific profile
-      this.currentInstance = this.getInstance({
+      this.currentInstance = await this.getInstance({
         showBrowser,
         userProfile: savedProfile,
       });
@@ -206,7 +206,7 @@ export class UlixeeWebEngine extends WebEngine {
 
       if (captchaSelector) {
         log.info(`[Ulixee Hero] Cleaning instance to reload profile`);
-        this.cleanup();
+        await this.cleanup();
       }
 
       return {
@@ -286,7 +286,7 @@ export class UlixeeWebEngine extends WebEngine {
   }
 
   async launch(url: string): Promise<Hero> {
-    this.currentInstance = this.getInstance({
+    this.currentInstance = await this.getInstance({
       showBrowser: true,
       userProfile: await this.profileManager.loadProfile(extractDomain(url)),
     });
@@ -457,9 +457,11 @@ export class UlixeeWebEngine extends WebEngine {
    */
   async cleanup(): Promise<void> {
     if (this.currentInstance) {
+      const instance = this.currentInstance;
+
+      this.currentInstance = undefined;
       try {
-        await this.currentInstance.hero.close();
-        this.currentInstance = undefined;
+        await instance.hero.close();
         log.debug('[Ulixee Hero] Instance closed');
       } catch (error) {
         log.error('[Ulixee Hero] Error closing instance:', error);
@@ -467,15 +469,15 @@ export class UlixeeWebEngine extends WebEngine {
     }
   }
 
-  private getInstance({
+  private async getInstance({
     showBrowser,
     userProfile,
   }: {
     showBrowser?: boolean;
     userProfile?: IUserProfile;
-  }): Instance {
+  }): Promise<Instance> {
     if (this.currentInstance) {
-      this.cleanup();
+      await this.cleanup();
     }
 
     const createProperties = {
@@ -494,8 +496,9 @@ export class UlixeeWebEngine extends WebEngine {
     return {
       click: async (selector: string): Promise<void> => {
         const element = hero.document.querySelector(selector);
-        await hero.waitForElement(element);
-        element.click();
+        if (await element.$exists) {
+          await element.click();
+        }
       },
       isVisible: async (selector: string): Promise<boolean> => {
         const element = hero.document.querySelector(selector);

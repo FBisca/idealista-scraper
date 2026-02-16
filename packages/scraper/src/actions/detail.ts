@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { log } from '@workspace/logger';
 import { z } from 'zod';
+import { CloudNode } from '@ulixee/cloud';
 import {
   IdealistaDetailParserPlugin,
   type IdealistaDetailParseResult,
@@ -80,6 +81,12 @@ export async function runDetailAction(
   propertyId: string,
   options?: RunDetailActionOptions,
 ): Promise<number> {
+  const cloudNode = new CloudNode({
+    shouldShutdownOnSignals: true,
+  });
+  await cloudNode.listen();
+
+  const cloudAddress = await cloudNode.address;
   const startTime = Date.now();
 
   const pretty = options?.pretty ?? false;
@@ -87,7 +94,19 @@ export async function runDetailAction(
   const outputFile = options?.outputFile;
   const targetUrl = buildDetailUrl(propertyId);
 
-  const engine = new UlixeeWebEngine();
+  const engine = new UlixeeWebEngine({
+    blockedResourceTypes: [
+      'BlockAssets',
+      'BlockCssResources',
+      'BlockFonts',
+      'BlockIcons',
+      'BlockImages',
+      'BlockMedia',
+    ],
+    connectionToCore: {
+      host: cloudAddress,
+    },
+  });
 
   log.info('Starting detail action', JSON.stringify({ targetUrl, options }));
   try {
@@ -125,6 +144,7 @@ export async function runDetailAction(
     return 0;
   } finally {
     await engine.cleanup();
+    await cloudNode.close();
   }
 }
 
