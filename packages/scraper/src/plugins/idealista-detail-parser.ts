@@ -6,7 +6,6 @@ import {
   type PluginEvaluation,
   type WebContent,
 } from '../web-engine/types.js';
-import { log } from '@workspace/logger';
 
 type CurrencyCode = 'EUR' | 'USD' | 'GBP' | 'UNKNOWN';
 

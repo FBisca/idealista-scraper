@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import { log } from '@workspace/logger';
 import { z } from 'zod';
 import {
@@ -11,8 +11,10 @@ import {
   type IdealistaListParseResult,
 } from '../plugins/idealista-list-parser.js';
 import { formatJson } from '../utils/json.js';
-import type { FetchResponse } from '../web-engine/types.js';
-import { UlixeeWebEngine } from '../web-engine/ulixee-engine.js';
+import { CrawlOrchestrator } from '../orchestrator/crawler.js';
+import { Router } from '../orchestrator/router.js';
+import { UlixeeEngineAdapter } from '../web-engine/engine-adapter.js';
+import { ProgressWriter } from '../pipeline/progress-writer.js';
 
 const booleanFromCliSchema = z
   .enum(['true', 'false'])
@@ -186,6 +188,32 @@ const crawlActionOptionsSchema = z.object({
       return value;
     }, booleanFromCliSchema)
     .default(false),
+  resume: z
+    .preprocess((value) => {
+      if (value === undefined) {
+        return 'false';
+      }
+
+      if (typeof value === 'string') {
+        return value.toLowerCase();
+      }
+
+      return value;
+    }, booleanFromCliSchema)
+    .default(false),
+  fresh: z
+    .preprocess((value) => {
+      if (value === undefined) {
+        return 'false';
+      }
+
+      if (typeof value === 'string') {
+        return value.toLowerCase();
+      }
+
+      return value;
+    }, booleanFromCliSchema)
+    .default(false),
 });
 
 const crawlArgsSchema = z.object({
@@ -248,43 +276,11 @@ function buildDetailUrl(propertyId: string): string {
   return `https://www.idealista.com/inmueble/${propertyId}/`;
 }
 
-async function fetchDetailById(
-  propertyId: string,
-  headless: boolean,
-): Promise<
-  | { success: true; content: IdealistaDetailParseResult }
-  | {
-      success: false;
-      propertyId: string;
-      error: string;
-      errorCode?: string;
-    }
-> {
-  const engine = new UlixeeWebEngine();
-
-  try {
-    const response: FetchResponse<IdealistaDetailParseResult> =
-      await engine.fetchContent<IdealistaDetailParseResult>(
-        buildDetailUrl(propertyId),
-        {
-          showBrowser: !headless,
-          htmlParser: new IdealistaDetailParserPlugin(),
-        },
-      );
-
-    if (!response.success) {
-      return {
-        success: false,
-        propertyId,
-        error: response.error,
-        errorCode: response.errorCode,
-      };
-    }
-
-    return { success: true, content: response.content };
-  } finally {
-    await engine.cleanup();
+function resolveOutputDir(outputFile: string | undefined): string {
+  if (outputFile) {
+    return dirname(outputFile);
   }
+  return join('tmp', 'crawl');
 }
 
 export async function runCrawlAction(
@@ -297,132 +293,89 @@ export async function runCrawlAction(
   const sortBy = options?.sortBy ?? 'relevance';
   const skipPages = Math.max(0, options?.skipPages ?? 0);
   const workers = Math.max(1, options?.workers ?? 4);
-  const maxErrors = Math.max(1, options?.maxErrors ?? 5);
-  const maxItems =
-    options?.maxItems === undefined ? undefined : Math.max(1, options.maxItems);
+  const maxItems = options?.maxItems;
   const headless = options?.headless ?? true;
   const outputFile = options?.outputFile;
+  const resume = options?.resume ?? false;
   const targetUrl = normalizeUrl(inputUrl, skipPages, sortBy);
 
-  const listEngine = new UlixeeWebEngine();
-  const listedIds: string[] = [];
-  const visitedIds = new Set<string>();
-
-  let currentUrl: string | undefined = targetUrl;
-  let pagesFetched = 0;
+  const outputDir = resolveOutputDir(outputFile);
+  const progressPath = join(outputDir, 'progress.jsonl');
 
   log.info('Starting crawl action', JSON.stringify({ targetUrl, options }));
-  try {
-    while (currentUrl) {
-      const response: FetchResponse<IdealistaListParseResult> =
-        await listEngine.fetchContent<IdealistaListParseResult>(currentUrl, {
-          showBrowser: !headless,
-          htmlParser: new IdealistaListParserPlugin(),
-        });
 
-      if (!response.success) {
-        console.error(
-          formatJson(
-            {
-              success: false,
-              error: response.error,
-              errorCode: response.errorCode,
-              metadata: response.metadata,
-              pagination: {
-                pagesFetched,
-                failedUrl: currentUrl,
-              },
-            },
-            pretty,
-          ),
-        );
-        return 1;
-      }
+  const router = new Router();
+  let itemsEnqueued = 0;
 
-      pagesFetched += 1;
+  router.addHandler('LIST', async (context) => {
+    const response = await context.fetchPage<IdealistaListParseResult>({
+      htmlParser: new IdealistaListParserPlugin(),
+      showBrowser: !headless,
+    });
 
-      for (const listing of response.content.listings) {
-        if (visitedIds.has(listing.id)) {
-          continue;
-        }
+    if (!response.success) {
+      throw new Error(response.error);
+    }
 
-        visitedIds.add(listing.id);
-        listedIds.push(listing.id);
-
-        if (maxItems !== undefined && listedIds.length >= maxItems) {
-          break;
-        }
-      }
-
-      if (maxItems !== undefined && listedIds.length >= maxItems) {
+    for (const listing of response.content.listings) {
+      if (maxItems !== undefined && itemsEnqueued >= maxItems) {
         break;
       }
 
-      const nextPageUrl: string | undefined =
-        response.content.pagination.nextPageUrl;
-      if (!nextPageUrl) {
-        break;
-      }
-
-      await waitHumanDelay();
-      currentUrl = nextPageUrl;
-    }
-  } finally {
-    await listEngine.cleanup();
-  }
-
-  const targetIds =
-    maxItems === undefined ? listedIds : listedIds.slice(0, maxItems);
-
-  const detailsByIndex: Array<IdealistaDetailParseResult | undefined> =
-    Array.from({ length: targetIds.length });
-  let nextIndex = 0;
-  let errorCount = 0;
-  let thresholdReached = false;
-
-  async function runWorker(): Promise<void> {
-    while (!thresholdReached) {
-      const taskIndex = nextIndex;
-      if (taskIndex >= targetIds.length) {
-        return;
-      }
-
-      nextIndex += 1;
-      const propertyId = targetIds[taskIndex];
-      if (!propertyId) {
-        return;
-      }
-
-      const detailResult = await fetchDetailById(propertyId, headless);
-      if (detailResult.success) {
-        detailsByIndex[taskIndex] = detailResult.content;
-        continue;
-      }
-
-      errorCount += 1;
-      log.warn(
-        'Detail fetch failed during crawl',
-        JSON.stringify({
-          propertyId: detailResult.propertyId,
-          error: detailResult.error,
-          errorCode: detailResult.errorCode,
-          errorCount,
-          maxErrors,
-        }),
-      );
-
-      if (errorCount >= maxErrors) {
-        thresholdReached = true;
+      const detailUrl = buildDetailUrl(listing.id);
+      const added = context.enqueue(detailUrl, 'DETAIL', {
+        propertyId: listing.id,
+      });
+      if (added) {
+        itemsEnqueued += 1;
       }
     }
-  }
 
-  const workerCount = Math.min(workers, targetIds.length || 1);
-  await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
+    const nextPageUrl = response.content.pagination.nextPageUrl;
+    if (nextPageUrl && (maxItems === undefined || itemsEnqueued < maxItems)) {
+      context.enqueue(nextPageUrl, 'LIST');
+    }
+  });
 
-  const details = detailsByIndex.filter(
-    (detail): detail is IdealistaDetailParseResult => detail !== undefined,
+  router.addHandler('DETAIL', async (context) => {
+    const response = await context.fetchPage<IdealistaDetailParseResult>({
+      htmlParser: new IdealistaDetailParserPlugin(),
+      showBrowser: !headless,
+    });
+
+    if (!response.success) {
+      throw new Error(response.error);
+    }
+
+    const propertyId =
+      (context.request.userData?.propertyId as string | undefined) ??
+      context.request.uniqueKey;
+    context.pushData(propertyId, response.content);
+  });
+
+  const orchestrator = new CrawlOrchestrator(
+    {
+      maxConcurrency: workers,
+      maxRequestsPerMinute: 30,
+      maxRetries: 3,
+      outputPath: progressPath,
+      statePath: join(outputDir, 'crawl-state.json'),
+      queuePath: join(outputDir, 'queue.jsonl'),
+      errorSnapshotDir: join(outputDir, 'errors'),
+      sourceUrl: targetUrl,
+      resume,
+      engineFactory: () => new UlixeeEngineAdapter(),
+    },
+    router,
   );
+
+  await orchestrator.run([{ url: targetUrl, label: 'LIST' }]);
+
+  const progressWriter = new ProgressWriter<IdealistaDetailParseResult>(
+    progressPath,
+  );
+  const entries = progressWriter.readAll();
+  const details = entries.map((entry) => entry.data);
 
   const output = formatJson(details, pretty);
   if (outputFile) {
@@ -436,36 +389,12 @@ export async function runCrawlAction(
   log.info(
     'Crawl action finished',
     JSON.stringify({
-      pagesFetched,
-      listed: targetIds.length,
       detailed: details.length,
-      errors: errorCount,
-      workers: workerCount,
       durationMs,
-      thresholdReached,
     }),
   );
 
-  if (thresholdReached && errorCount >= maxErrors) {
-    console.error(
-      `Reached --maxErrors=${maxErrors}. Stopped scheduling new detail tasks.`,
-    );
-  }
-
-  if (details.length === 0) {
-    return 1;
-  }
-
-  return thresholdReached ? 1 : 0;
-}
-
-async function waitHumanDelay(): Promise<void> {
-  const minDelayMs = 350;
-  const maxDelayMs = 1000;
-  const delayMs =
-    Math.floor(Math.random() * (maxDelayMs - minDelayMs + 1)) + minDelayMs;
-
-  await new Promise((resolve) => setTimeout(resolve, delayMs));
+  return details.length === 0 ? 1 : 0;
 }
 
 export { crawlArgsSchema };

@@ -96,6 +96,8 @@ Usage:
   cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --maxItems=30 --workers=4
   cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --maxItems=30 --maxErrors=5
   cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --outputFile="./tmp/crawl-details.json" --pretty
+  cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --resume
+  cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --fresh
 
 Commands:
   help    Show this help message
@@ -130,6 +132,8 @@ Crawl options:
   --skipPages Optional for crawl. Starts at pagina-(skipPages+1).htm (default: 0).
   --headless  Optional for crawl. Use false to show browser (default: true).
   --pretty    Optional for crawl. Pretty-print JSON output.
+  --resume    Optional for crawl. Resume from existing crawl state.
+  --fresh     Optional for crawl. Force restart, delete existing state.
 `);
 }
 
@@ -210,6 +214,8 @@ async function main(): Promise<number> {
       workers: parsedCrawlArgs.data.workers,
       maxErrors: parsedCrawlArgs.data.maxErrors,
       maxItems: parsedCrawlArgs.data.maxItems,
+      resume: parsedCrawlArgs.data.resume,
+      fresh: parsedCrawlArgs.data.fresh,
     });
   }
 
