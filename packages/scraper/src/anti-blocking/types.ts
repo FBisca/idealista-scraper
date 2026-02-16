@@ -7,8 +7,4 @@ type RetryDecision = {
   errorClass: ErrorClass;
 };
 
-type RateLimiterConfig = {
-  maxRequestsPerMinute: number;
-};
-
-export type { ErrorClass, RetryDecision, RateLimiterConfig };
+export type { ErrorClass, RetryDecision };

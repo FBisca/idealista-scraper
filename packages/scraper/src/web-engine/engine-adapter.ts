@@ -7,29 +7,11 @@ import type {
 import type { UlixeeWebEngine } from './ulixee-engine.js';
 import type { IHeroCreateOptions } from '@ulixee/hero';
 
-type EngineType = 'ulixee' | 'crawlee';
-
-abstract class EngineAdapter {
-  abstract readonly engineType: EngineType;
-
-  abstract fetch<T>(
-    url: string,
-    options: FetchContentOptions<
-      T,
-      WebContentParser<string, T> | InteractiveWebContentParser<string, T>
-    >,
-  ): Promise<FetchResponse<T>>;
-
-  abstract cleanup(): Promise<void>;
-}
-
-class UlixeeEngineAdapter extends EngineAdapter {
-  readonly engineType = 'ulixee' as const;
+class UlixeeEngineAdapter {
   private engine: UlixeeWebEngine | undefined;
   private readonly options: IHeroCreateOptions | undefined;
 
   constructor(options?: IHeroCreateOptions) {
-    super();
     this.options = options;
   }
 
@@ -60,5 +42,4 @@ class UlixeeEngineAdapter extends EngineAdapter {
   }
 }
 
-export { EngineAdapter, UlixeeEngineAdapter };
-export type { EngineType };
+export { UlixeeEngineAdapter };
