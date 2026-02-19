@@ -1,26 +1,23 @@
+import { log } from '@workspace/logger';
+import {
+  UlixeeCrawler,
+  UlixeeCrawlingContext,
+} from '@workspace/ulixee-crawler';
+import { Configuration, Dataset, Router } from 'crawlee';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { log } from '@workspace/logger';
 import { z } from 'zod';
-import {
-  BasicCrawler,
-  createBasicRouter,
-  Dataset,
-  Configuration,
-} from 'crawlee';
+import { RetryStrategy } from '../anti-blocking/retry-strategy.js';
+import { ErrorSnapshotWriter } from '../observability/error-snapshot.js';
 import {
   IdealistaDetailParserPlugin,
   type IdealistaDetailParseResult,
 } from '../plugins/idealista-detail-parser.js';
-import {
-  IdealistaListParserPlugin,
-  type IdealistaListParseResult,
-} from '../plugins/idealista-list-parser.js';
+import { IdealistaListParserPlugin } from '../plugins/idealista-list-parser.js';
 import { formatJson } from '../utils/json.js';
-import { UlixeeEngineAdapter } from '../web-engine/engine-adapter.js';
-import { fetchWithHttp } from '../web-engine/crawlee-engine.js';
-import { RetryStrategy } from '../anti-blocking/retry-strategy.js';
-import { ErrorSnapshotWriter } from '../observability/error-snapshot.js';
+import { InteractiveParseContext } from 'web-engine/types.js';
+import { UlixeeWebEngine } from 'web-engine/ulixee-engine.js';
+import { UlixeeProfileManager } from 'web-engine/ulixee-profile-manager.js';
 
 const booleanFromCliSchema = z
   .enum(['true', 'false'])
@@ -339,35 +336,18 @@ export async function runCrawlAction(
 
   let itemsEnqueued = 0;
   let errorCount = 0;
-  const ulixeeAdapter = new UlixeeEngineAdapter(
-    headless ? undefined : { showChrome: true },
-  );
 
-  const router = createBasicRouter();
+  const router = Router.create<UlixeeCrawlingContext>();
 
   router.addHandler('LIST', async (context) => {
-    const { request, crawler } = context;
+    const { request, crawler, page } = context;
     log.info(`[LIST] Fetching: ${request.url}`);
 
-    const response = await fetchWithHttp<IdealistaListParseResult>(
-      request.url,
-      {
-        htmlParser: new IdealistaListParserPlugin(),
-      },
-    );
-
-    if (!response.success) {
-      const errorClass = retryStrategy.classify({
-        response,
-        errorMessage: response.error,
-      });
-      log.warn(`[LIST] Failed: ${response.error} (class: ${errorClass})`);
-      throw new Error(response.error);
-    }
-
-    log.info(
-      `[LIST] Found ${response.content.listings.length} listings on ${request.url}`,
-    );
+    const parser = new IdealistaListParserPlugin();
+    const response = await parser.extract({
+      url: request.url,
+      data: await page.html(),
+    });
 
     const detailRequests: Array<{
       url: string;
@@ -375,7 +355,7 @@ export async function runCrawlAction(
       userData: Record<string, string>;
     }> = [];
 
-    for (const listing of response.content.listings) {
+    for (const listing of response.listings) {
       if (maxItems !== undefined && itemsEnqueued >= maxItems) {
         break;
       }
@@ -393,66 +373,52 @@ export async function runCrawlAction(
       await crawler.addRequests(detailRequests);
     }
 
-    const nextPageUrl = response.content.pagination.nextPageUrl;
+    const nextPageUrl = response.pagination.nextPageUrl;
     if (nextPageUrl && (maxItems === undefined || itemsEnqueued < maxItems)) {
       await crawler.addRequests([{ url: nextPageUrl, label: 'LIST' }]);
     }
   });
 
   router.addHandler('DETAIL', async (context) => {
-    const { request } = context;
+    const { request, page } = context;
     const propertyId =
       (request.userData?.propertyId as string | undefined) ?? request.uniqueKey;
 
     log.info(`[DETAIL] Fetching: ${request.url} (id: ${propertyId})`);
-
-    const response = await ulixeeAdapter.fetch<IdealistaDetailParseResult>(
-      request.url,
+    const parser = new IdealistaDetailParserPlugin();
+    const parseContext: InteractiveParseContext = {
+      engine: 'ulixee',
+      interaction: UlixeeWebEngine.createInteractionAdapter(page.tab),
+      requestUrl: request.url,
+    };
+    const response = await parser.extract(
       {
-        htmlParser: new IdealistaDetailParserPlugin(),
-        showBrowser: !headless,
+        url: request.url,
+        data: await page.html(),
       },
+      parseContext,
     );
 
-    if (!response.success) {
-      const errorClass = retryStrategy.classify({
-        response,
-        errorMessage: response.error,
-      });
-
-      errorSnapshot.write(propertyId, {
-        url: request.url,
-        statusCode: response.metadata?.statusCode as number | undefined,
-        errorMessage: response.error,
-        errorClass,
-        timestamp: Date.now(),
-      });
-
-      errorCount += 1;
-      log.warn(
-        `[DETAIL] Failed: ${response.error} (class: ${errorClass}, errors: ${errorCount}/${maxErrors})`,
-      );
-
-      if (errorCount >= maxErrors) {
-        log.error(
-          `[DETAIL] Max errors reached (${maxErrors}). Stopping crawl.`,
-        );
-      }
-
-      throw new Error(response.error);
-    }
-
     log.info(`[DETAIL] Success: ${propertyId}`);
-    await Dataset.pushData({ ...response.content, id: propertyId });
+    await Dataset.pushData({ ...response, id: propertyId });
   });
 
-  const crawler = new BasicCrawler(
+  const profileManager = new UlixeeProfileManager();
+  const profile = await profileManager.loadGlobalProfile();
+
+  const crawler = new UlixeeCrawler(
     {
-      requestHandler: router,
+      launchContext: {
+        heroOptions: {
+          userProfile: profile,
+        },
+      },
       maxConcurrency: workers,
       maxRequestRetries: 3,
+      headless,
       maxRequestsPerMinute: 30,
       requestHandlerTimeoutSecs: 120,
+      requestHandler: router,
       failedRequestHandler: ({ request }, error) => {
         const message = error instanceof Error ? error.message : String(error);
         log.error(
@@ -464,8 +430,6 @@ export async function runCrawlAction(
   );
 
   await crawler.run([{ url: targetUrl, label: 'LIST' }]);
-
-  await ulixeeAdapter.cleanup();
 
   const dataset = await Dataset.open(undefined, { config });
   const datasetContent = await dataset.getData();

@@ -92,7 +92,17 @@ export class UlixeeCrawler extends BrowserCrawler<
   ) {
     const { launchContext = {}, headless, ...browserCrawlerOptions } = options;
 
-    const heroOptions: IHeroCreateOptions = launchContext.heroOptions ?? {};
+    const heroOptions: IHeroCreateOptions = {
+      viewport: {
+        width: 1920,
+        height: 1080,
+      },
+
+      // Locale and timezone
+      locale: 'en-US',
+      timezoneId: 'America/New_York',
+      ...launchContext.heroOptions,
+    };
 
     if (headless != null) {
       heroOptions.showChrome = !headless;

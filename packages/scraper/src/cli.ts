@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { crawlArgsSchema, runCrawlAction } from './actions/crawl.js';
 import { detailArgsSchema, runDetailAction } from './actions/detail.js';
 import { listArgsSchema, runListAction } from './actions/list.js';
+import {
+  mapInspectArgsSchema,
+  resolveMapInspectTargetUrl,
+  runMapInspectAction,
+} from './actions/map-inspect.js';
 
 type ParsedArgs = {
   command: string;
@@ -24,6 +29,10 @@ const cliInputSchema = z.discriminatedUnion('command', [
   }),
   z.object({
     command: z.literal('crawl'),
+    options: z.record(z.string(), z.string()),
+  }),
+  z.object({
+    command: z.literal('map-inspect'),
     options: z.record(z.string(), z.string()),
   }),
 ]);
@@ -98,12 +107,16 @@ Usage:
   cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --outputFile="./tmp/crawl-details.json" --pretty
   cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --resume
   cli crawl --url="https://www.idealista.com/venta-viviendas/madrid-madrid/" --fresh
+  cli map-inspect
+  cli map-inspect --constructionType=7 --propertyType=14 --locationType=CA --locationCode=08 --withStatistics=true --locale=en
+  cli map-inspect --search="Madrid" --outputDir="./tmp/map-inspect"
 
 Commands:
   help    Show this help message
   list    Scrape an Idealista listing page and print parsed JSON
   detail  Scrape an Idealista property detail page by ID
   crawl   List flats then fetch detail pages in parallel workers
+  map-inspect  Extract Penotariado placeName/pricePerSqm rows and save inspection artifacts
 
 List options:
   --url   Required for list. Accepts full URL or idealista path.
@@ -134,6 +147,19 @@ Crawl options:
   --pretty    Optional for crawl. Pretty-print JSON output.
   --resume    Optional for crawl. Resume from existing crawl state.
   --fresh     Optional for crawl. Force restart, delete existing state.
+
+Map-inspect options:
+  --constructionType Optional. One of: 99 (all), 7 (new), 9 (second-hand). Default: 99.
+  --propertyType Optional. One of: 99 (all), 14 (multi-family), 15 (single-family). Default: 99.
+  --locationType Optional. One of: PA (country), CA (autonomous community), PR (province), MN (municipality), CP (postal code). Default: PA.
+  --locationCode Optional. Location code for selected location type, or null. Default: null.
+  --withStatistics Optional. true/false. Default: true.
+  --locale     Optional. One of: en, es, ca, gl, eu. Default: en.
+  --search     Optional search term for ArcGIS full-text probes (default: Madrid).
+  --outputDir  Optional output directory for artifacts (default: ./tmp/map-inspect).
+  --outputFile Optional extracted rows JSON output file path.
+  --headless   Optional for map-inspect. Use false to show browser (default: true).
+  --pretty     Optional for map-inspect. Pretty-print summary JSON output.
 `);
 }
 
@@ -216,6 +242,29 @@ async function main(): Promise<number> {
       maxItems: parsedCrawlArgs.data.maxItems,
       resume: parsedCrawlArgs.data.resume,
       fresh: parsedCrawlArgs.data.fresh,
+    });
+  }
+
+  if (parsedCliInput.data.command === 'map-inspect') {
+    const parsedMapInspectArgs = mapInspectArgsSchema.safeParse(
+      parsedCliInput.data.options,
+    );
+    if (!parsedMapInspectArgs.success) {
+      console.error(
+        parsedMapInspectArgs.error.issues[0]?.message ?? 'Invalid arguments',
+      );
+      printHelp();
+      return 1;
+    }
+
+    const targetUrl = resolveMapInspectTargetUrl(parsedMapInspectArgs.data);
+
+    return runMapInspectAction(targetUrl, {
+      search: parsedMapInspectArgs.data.search,
+      outputDir: parsedMapInspectArgs.data.outputDir,
+      outputFile: parsedMapInspectArgs.data.outputFile,
+      headless: parsedMapInspectArgs.data.headless,
+      pretty: parsedMapInspectArgs.data.pretty,
     });
   }
 

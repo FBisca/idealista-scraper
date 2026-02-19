@@ -12,6 +12,7 @@ import type { CommonPage } from '@crawlee/browser-pool';
 export class UlixeeBrowser {
   private readonly heroOptions: IHeroCreateOptions;
   private readonly hero: Hero;
+  private initialized = false;
 
   constructor(hero: Hero, heroOptions: IHeroCreateOptions = {}) {
     this.heroOptions = heroOptions;
@@ -19,6 +20,11 @@ export class UlixeeBrowser {
   }
 
   async newPage(): Promise<UlixeePage> {
+    if (!this.initialized) {
+      this.initialized = true;
+      return new UlixeePage(this.hero.activeTab);
+    }
+
     const tab = await this.hero.newTab();
     return new UlixeePage(tab);
   }
@@ -46,5 +52,10 @@ export class UlixeePage implements CommonPage {
 
   url(): string | Promise<string> {
     return this.tab.url;
+  }
+
+  async html(): Promise<string> {
+    const document = await this.tab.document;
+    return document.documentElement.outerHTML;
   }
 }

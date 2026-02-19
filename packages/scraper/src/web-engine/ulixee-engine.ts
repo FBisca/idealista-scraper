@@ -1,6 +1,6 @@
 import { log } from '@workspace/logger';
 import { IUserProfile, type IHeroCreateOptions } from '@ulixee/hero';
-import { Hero } from '@ulixee/hero/lib/extendables';
+import { Hero, Tab } from '@ulixee/hero/lib/extendables';
 import { extractDomain } from '../utils/url.js';
 import { UlixeeProfileManager } from './ulixee-profile-manager.js';
 import {
@@ -167,7 +167,7 @@ export class UlixeeWebEngine extends WebEngine {
         engine: 'ulixee-hero',
         requestUrl: url,
         finalUrl: currentUrl,
-        interaction: this.createInteractionAdapter(hero),
+        interaction: UlixeeWebEngine.createInteractionAdapter(hero),
         page: {
           title,
           html,
@@ -492,7 +492,7 @@ export class UlixeeWebEngine extends WebEngine {
     };
   }
 
-  private createInteractionAdapter(hero: Hero): InteractionAdapter {
+  public static createInteractionAdapter(hero: Hero | Tab): InteractionAdapter {
     return {
       click: async (selector: string): Promise<void> => {
         const element = hero.document.querySelector(selector);
